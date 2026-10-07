@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" role="img" aria-label="Foto menu tidak tersedia">
+  <rect width="400" height="400" fill="#e8eee9"/>
+  <rect x="70" y="168" width="260" height="132" rx="28" fill="#d4e0d8"/>
+  <ellipse cx="200" cy="168" rx="118" ry="36" fill="#c5d6cb"/>
+  <ellipse cx="200" cy="158" rx="86" ry="22" fill="#f7faf8"/>
+  <circle cx="168" cy="156" r="10" fill="#e85d4c"/>
+  <circle cx="196" cy="150" r="8" fill="#1f6b4a"/>
+  <circle cx="224" cy="156" r="9" fill="#c94334"/>
+</svg>

@@ -1,0 +1,76 @@
+<div
+  class="saver"
+  [class.is-fill]="!!current?.fill"
+  *ngIf="visible"
+  role="button"
+  tabindex="0"
+  aria-label="Sentuh layar untuk memesan"
+  (click)="dismiss($event)"
+  (keydown.enter)="dismiss($event)"
+>
+  <div class="backdrop" aria-hidden="true">
+    <ng-container *ngFor="let s of slides; let i = index; trackBy: trackSlide">
+      <div
+        *ngIf="isRendered(i)"
+        class="backdrop-layer"
+        [class.is-active]="i === index"
+        [style.background-image]="'url(' + s.bg + ')'"
+      ></div>
+    </ng-container>
+    <div class="backdrop-shade"></div>
+  </div>
+
+  <header class="top">
+    <div class="progress" *ngIf="slides.length > 1" aria-hidden="true">
+      <span
+        *ngFor="let s of slides; let i = index; trackBy: trackSlide"
+        class="segment"
+        [class.is-done]="segmentState(i) === 'done'"
+        [class.is-active]="segmentState(i) === 'active'"
+      >
+        <i [style.animation-duration.ms]="s.durationMs"></i>
+      </span>
+    </div>
+
+    <div class="meta" *ngIf="!current?.fill">
+      <p class="label" *ngIf="current">
+        <span class="label-count">{{ index + 1 }}/{{ slides.length }}</span>
+        <span class="label-text">{{ current.label }}</span>
+      </p>
+      <div class="when">
+        <strong>{{ clock }}</strong>
+        <span>{{ dateLabel }}</span>
+      </div>
+    </div>
+  </header>
+
+  <main class="saver-stage" [class.is-fill]="!!current?.fill" *ngIf="slides.length; else brand">
+    <ng-container *ngFor="let s of slides; let i = index; trackBy: trackSlide">
+      <figure *ngIf="isRendered(i)" class="slide" [class.is-fill]="s.fill" [class.is-active]="i === index">
+        <img
+          class="panel"
+          [class.is-fill]="s.fill"
+          [src]="s.src"
+          [alt]="s.label"
+          [style.animation-duration.ms]="s.durationMs"
+          (error)="onImageError(s)"
+        />
+      </figure>
+    </ng-container>
+  </main>
+
+  <ng-template #brand>
+    <main class="saver-stage saver-stage-brand">
+      <img class="brand-logo" src="assets/img/Samakan_Logo-01.png" alt="Samakan" />
+      <p class="brand-tagline">Makanan hangat, siap kapan saja.</p>
+    </main>
+  </ng-template>
+
+  <footer class="cta" *ngIf="!current?.fill">
+    <div class="cta-pill">
+      <span class="pulse" aria-hidden="true"></span>
+      <span class="cta-label">Sentuh layar untuk mulai pesan</span>
+    </div>
+    <p class="cta-meta">Bayar QRIS · Dipanaskan otomatis · Ambil di mesin ini</p>
+  </footer>
+</div>

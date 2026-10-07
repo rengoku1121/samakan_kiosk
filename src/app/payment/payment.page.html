@@ -1,0 +1,85 @@
+<ion-content [fullscreen]="true" class="payment-content">
+  <div class="stage">
+    <div class="stage-atmosphere" aria-hidden="true">
+      <div class="blob blob-a"></div>
+      <div class="blob blob-b"></div>
+    </div>
+
+    <header class="top-bar">
+      <button type="button" class="back-btn" (click)="cancel()" aria-label="Batalkan" [disabled]="cancelling">
+        ←
+      </button>
+      <div class="top-copy">
+        <p class="brand">{{ brand }}</p>
+        <p class="sub">Pembayaran QRIS</p>
+      </div>
+      <span class="step-pill">2 / 2</span>
+    </header>
+
+    <main class="panel" *ngIf="loading">
+      <p class="status-msg">Menyiapkan QRIS…</p>
+    </main>
+
+    <main class="panel" *ngIf="!loading && error">
+      <p class="status-msg error">{{ error }}</p>
+      <div class="error-actions">
+        <button type="button" class="btn-sim wide" (click)="retry()">Coba lagi</button>
+        <button type="button" class="btn-ghost wide" (click)="cancel()" [disabled]="cancelling">Kembali ke menu</button>
+      </div>
+    </main>
+
+    <main class="panel" *ngIf="!loading && session as pay">
+      <div class="order-summary anim-1">
+        <p class="product">{{ pay.product_name }}</p>
+        <p class="meta">{{ heatLabel }} · Slot {{ pay.slot_code }}</p>
+        <p class="amount">{{ priceFmt(pay.price) }}</p>
+      </div>
+
+      <div class="qr-wrap anim-2" [class.is-dim]="isExpired || pay.status === 'PAID'">
+        <img
+          class="qr"
+          [src]="pay.qr_image_url"
+          alt="QRIS pembayaran"
+          (error)="onQrError($event)"
+        />
+        <div class="qr-mask" *ngIf="pay.status === 'PAID'">
+          <span>Lunas</span>
+        </div>
+        <div class="qr-mask" *ngIf="isExpired && pay.status !== 'PAID'">
+          <span>Kadaluarsa</span>
+        </div>
+        <div class="qr-mask" *ngIf="(!pay.qr_image_url || qrBroken) && pay.status !== 'PAID' && !isExpired">
+          <span>QR gagal tampil</span>
+        </div>
+      </div>
+
+      <div class="pay-copy anim-2">
+        <p class="scan-title" *ngIf="pay.status === 'PENDING' && !isExpired">
+          Scan QRIS dengan e-wallet / m-banking
+        </p>
+        <p class="scan-title" *ngIf="pay.status === 'PAID'">Pembayaran berhasil</p>
+        <p class="scan-title" *ngIf="isExpired && pay.status !== 'PAID'">Waktu habis</p>
+
+        <p class="timer" *ngIf="pay.status === 'PENDING' && !isExpired">
+          Sisa waktu <strong>{{ timerFmt(remainingSec) }}</strong>
+        </p>
+        <p class="order-code">{{ pay.order_code }}</p>
+      </div>
+    </main>
+
+    <footer class="actions anim-3" *ngIf="!loading && session as pay">
+      <button type="button" class="btn-ghost" (click)="cancel()" [disabled]="cancelling">
+        {{ cancelling ? 'Membatalkan…' : (pay.status === 'PAID' ? 'Selesai' : 'Batalkan') }}
+      </button>
+      <button
+        type="button"
+        class="btn-retry"
+        *ngIf="isExpired && pay.status !== 'PAID'"
+        (click)="cancel()"
+        [disabled]="cancelling"
+      >
+        Pilih ulang
+      </button>
+    </footer>
+  </div>
+</ion-content>

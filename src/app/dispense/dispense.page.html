@@ -1,0 +1,65 @@
+<ion-content [fullscreen]="true" class="dispense-content">
+  <div class="stage" *ngIf="session as pay">
+    <div class="stage-atmosphere" aria-hidden="true">
+      <div class="blob blob-a"></div>
+      <div class="blob blob-b"></div>
+    </div>
+
+    <header class="top-bar">
+      <p class="brand">{{ brand }}</p>
+      <span class="step-pill">Dispense</span>
+    </header>
+
+    <main class="panel" *ngIf="phase === 'running'">
+      <ng-container *ngIf="uiPhase === 'heating'; else busyOrPickup">
+        <p class="heat-eyebrow anim-1">Sedang dipanaskan</p>
+        <h1 class="title anim-2">{{ stepLabel }}</h1>
+        <p class="sub anim-2">Mohon tunggu hingga pemanas selesai. Jangan tinggalkan mesin.</p>
+      </ng-container>
+
+      <ng-template #busyOrPickup>
+        <div
+          class="spinner anim-1"
+          *ngIf="uiPhase !== 'pickup'"
+          aria-hidden="true"
+        ></div>
+        <div class="mark pickup anim-1" *ngIf="uiPhase === 'pickup'" aria-hidden="true">✓</div>
+        <h1 class="title anim-2">
+          {{ uiPhase === 'pickup' ? 'Silakan ambil' : stepLabel }}
+        </h1>
+        <p class="sub anim-2" *ngIf="uiPhase === 'pickup'">
+          Ambil produk di lubang pengambilan. Pintu menutup otomatis.
+        </p>
+        <p class="sub anim-2" *ngIf="uiPhase !== 'pickup'">
+          Mohon tunggu, jangan tinggalkan mesin.
+        </p>
+      </ng-template>
+
+      <div class="summary anim-3">
+        <p class="product">{{ pay.product_name }}</p>
+        <p class="meta">Slot {{ pay.slot_code }} · {{ heatLabel }}</p>
+        <p class="order-code">{{ pay.order_code }}</p>
+      </div>
+    </main>
+
+    <main class="panel" *ngIf="phase === 'failed' || phase === 'report_error'">
+      <div class="mark fail anim-1" aria-hidden="true">!</div>
+      <h1 class="title anim-2">Gagal mengeluarkan</h1>
+      <p class="sub anim-2">
+        {{ phase === 'report_error'
+          ? 'Konfirmasi ke server tertunda. Jika produk sudah keluar, silakan ambil. Jika belum, hubungi petugas.'
+          : 'Pembayaran sudah lunas. Hubungi petugas bila produk tidak keluar.' }}
+      </p>
+      <p class="error anim-3">{{ error }}</p>
+      <div class="summary anim-3">
+        <p class="product">{{ pay.product_name }}</p>
+        <p class="meta">Slot {{ pay.slot_code }} · {{ heatLabel }}</p>
+        <p class="order-code">{{ pay.order_code }}</p>
+      </div>
+    </main>
+
+    <footer class="actions" *ngIf="phase !== 'running'">
+      <button type="button" class="btn-done" (click)="done()">Kembali ke beranda</button>
+    </footer>
+  </div>
+</ion-content>

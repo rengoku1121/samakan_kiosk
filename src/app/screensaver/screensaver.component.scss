@@ -1,0 +1,412 @@
+/*
+ * Panel vending memakai WebView Chromium 66: tanpa inset, gap flexbox,
+ * aspect-ratio, backdrop-filter, clamp(), atau dvh.
+ */
+
+:host {
+  pointer-events: none;
+}
+
+.saver {
+  pointer-events: auto;
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  color: #fff;
+  background: #2a1210;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  animation: saverIn 0.55s ease both;
+}
+
+/* ---------- Latar: panel yang sama, diblur dan digelapkan ---------- */
+
+.backdrop,
+.backdrop-layer,
+.backdrop-shade {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  pointer-events: none;
+}
+
+.backdrop-layer {
+  background-size: cover;
+  background-position: center;
+  transform: scale(1.15);
+  animation: fadeOut 0.9s ease forwards;
+}
+
+.backdrop-layer.is-active {
+  z-index: 1;
+  animation: fadeIn 0.9s ease both;
+}
+
+.backdrop-shade {
+  z-index: 2;
+  background:
+    linear-gradient(180deg, rgba(42, 18, 16, 0.62) 0%, rgba(42, 18, 16, 0.18) 22%, rgba(42, 18, 16, 0.2) 70%, rgba(42, 18, 16, 0.86) 100%);
+}
+
+.top,
+.saver-stage,
+.cta {
+  position: relative;
+  z-index: 3;
+}
+
+/* ---------- Atas: progress, label slide, jam ---------- */
+
+.top {
+  padding: 20px 20px 0;
+  padding: calc(var(--kiosk-inset-y) + var(--safe-top)) calc(var(--kiosk-inset-x) + var(--safe-right)) 0
+    calc(var(--kiosk-inset-x) + var(--safe-left));
+}
+
+.saver.is-fill .top {
+  position: absolute;
+  top: 0;
+  right: 0;
+  left: 0;
+  z-index: 5;
+  pointer-events: none;
+}
+
+.saver.is-fill .segment {
+  height: 6px;
+  background: rgba(0, 0, 0, 0.35);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.35);
+}
+
+.progress {
+  display: flex;
+  margin: 0 -3px 16px;
+}
+
+.segment {
+  position: relative;
+  flex: 1 1 0;
+  height: 4px;
+  margin: 0 3px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.28);
+}
+
+.segment i {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  border-radius: inherit;
+  background: #fff;
+  transform: scaleX(0);
+  transform-origin: left center;
+}
+
+.segment.is-done i {
+  transform: scaleX(1);
+}
+
+.segment.is-active i {
+  animation-name: fill;
+  animation-timing-function: linear;
+  animation-fill-mode: forwards;
+}
+
+.meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.label {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  margin: 0 16px 0 0;
+  padding: 8px 16px 8px 8px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.14);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.label-count {
+  flex: 0 0 auto;
+  margin-right: 10px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: #fff;
+  color: #c41e24;
+  font-size: 12px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+.label-text {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.when {
+  flex: 0 0 auto;
+  text-align: right;
+  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.35);
+}
+
+.when strong {
+  display: block;
+  font-size: 26px;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+.when span {
+  display: block;
+  margin-top: 4px;
+  font-size: 12px;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.75);
+  text-transform: capitalize;
+}
+
+/* ---------- Tengah: panel brosur ---------- */
+
+.saver-stage {
+  flex: 1 1 auto;
+  min-height: 0;
+  margin: 18px 20px;
+  margin: 18px calc(var(--kiosk-inset-x) + var(--safe-right)) 18px calc(var(--kiosk-inset-x) + var(--safe-left));
+}
+
+.saver.is-fill {
+  background: #f7ebdc;
+}
+
+.saver-stage.is-fill {
+  margin: 0;
+}
+
+.slide {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0;
+  animation: slideOut 0.9s ease forwards;
+}
+
+.slide.is-active {
+  z-index: 1;
+  animation: slideIn 0.9s cubic-bezier(0.22, 0.61, 0.36, 1) both;
+}
+
+.panel {
+  display: block;
+  height: 100%;
+  width: auto;
+  max-width: 100%;
+  object-fit: contain;
+  border-radius: 22px;
+  background: #fff7ef;
+  box-shadow:
+    0 30px 60px rgba(20, 6, 4, 0.45),
+    0 0 0 1px rgba(255, 255, 255, 0.18);
+  animation-name: kenBurns;
+  animation-timing-function: linear;
+  animation-fill-mode: both;
+}
+
+.slide.is-fill {
+  align-items: stretch;
+}
+
+.panel.is-fill {
+  width: 100%;
+  height: 100%;
+  max-width: none;
+  object-fit: cover;
+  object-position: center;
+  border-radius: 0;
+  box-shadow: none;
+  background: #f7ebdc;
+  animation: none;
+}
+
+.saver-stage-brand {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+.brand-logo {
+  width: 280px;
+  height: auto;
+  filter: drop-shadow(0 18px 36px rgba(0, 0, 0, 0.45));
+}
+
+.brand-tagline {
+  margin: 20px 0 0;
+  font-size: 22px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.86);
+}
+
+/* ---------- Bawah: CTA ---------- */
+
+.cta {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0 20px 28px;
+  padding: 0 calc(var(--kiosk-inset-x) + var(--safe-right)) calc(var(--kiosk-inset-y) + var(--safe-bottom))
+    calc(var(--kiosk-inset-x) + var(--safe-left));
+  text-align: center;
+}
+
+.cta-pill {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px 30px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #f8832a 0%, #f15822 45%, #d91f26 100%);
+  box-shadow: 0 16px 36px rgba(217, 31, 38, 0.45);
+  animation: breathe 2.6s ease-in-out infinite;
+}
+
+.pulse {
+  flex: 0 0 auto;
+  width: 12px;
+  height: 12px;
+  margin-right: 14px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.7);
+  animation: ping 1.8s ease-out infinite;
+}
+
+.cta-label {
+  font-size: 20px;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+}
+
+.cta-meta {
+  margin: 12px 0 0;
+  font-size: 13px;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.78);
+}
+
+/* ---------- Panel vending 1080 px ---------- */
+
+@media (max-width: 479px) {
+  .cta-pill { padding: 14px 22px; }
+  .cta-label { font-size: 17px; white-space: nowrap; }
+  .cta-meta { font-size: 11px; }
+}
+
+@media (min-width: 900px) {
+  .progress { margin-bottom: 22px; }
+  .segment { height: 6px; }
+  .label { padding: 10px 22px 10px 10px; font-size: 20px; }
+  .label-count { margin-right: 14px; padding: 6px 14px; font-size: 17px; }
+  .when strong { font-size: 40px; }
+  .when span { margin-top: 6px; font-size: 17px; }
+  .saver-stage { margin-top: 28px; margin-bottom: 28px; }
+  .panel { border-radius: 32px; }
+  .brand-logo { width: 380px; }
+  .brand-tagline { font-size: 30px; }
+  .cta-pill { padding: 26px 52px; }
+  .pulse { width: 16px; height: 16px; margin-right: 20px; }
+  .cta-label { font-size: 32px; }
+  .cta-meta { margin-top: 18px; font-size: 20px; }
+}
+
+/* ---------- Animasi ---------- */
+
+@keyframes saverIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes fadeOut {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+
+@keyframes slideIn {
+  from { opacity: 0; transform: translateY(18px) scale(0.985); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes slideOut {
+  from { opacity: 1; transform: scale(1); }
+  to { opacity: 0; transform: scale(1.01); }
+}
+
+@keyframes kenBurns {
+  from { transform: scale(1); }
+  to { transform: scale(1.025); }
+}
+
+@keyframes fill {
+  from { transform: scaleX(0); }
+  to { transform: scaleX(1); }
+}
+
+@keyframes breathe {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.03); }
+}
+
+@keyframes ping {
+  0% { box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.7); }
+  70% { box-shadow: 0 0 0 14px rgba(255, 255, 255, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(255, 255, 255, 0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .saver,
+  .slide,
+  .slide.is-active,
+  .backdrop-layer,
+  .backdrop-layer.is-active,
+  .panel,
+  .cta-pill,
+  .pulse {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+  }
+
+  .panel,
+  .cta-pill {
+    animation: none !important;
+  }
+}

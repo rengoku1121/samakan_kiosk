@@ -1,0 +1,7 @@
+{
+  "name": "samakan_kiosk",
+  "integrations": {
+    "capacitor": {}
+  },
+  "type": "angular"
+}

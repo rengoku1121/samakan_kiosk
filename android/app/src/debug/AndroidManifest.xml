@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <application>
+        <!-- Debug: jangan jadi Home default, supaya Settings/launcher bisa dibuka. -->
+        <activity android:name=".MainActivity">
+            <intent-filter tools:node="remove">
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.HOME" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+        </activity>
+
+        <!-- Debug: jangan buka kiosk sendiri setelah boot. -->
+        <receiver
+            android:name=".BootReceiver"
+            android:enabled="false"
+            android:exported="true"
+            tools:replace="android:enabled" />
+    </application>
+</manifest>

@@ -1,0 +1,270 @@
+@import "../../theme/compat";
+
+.service-content {
+  --background: #0f1a15;
+}
+
+.stage {
+  min-height: 100%;
+  background: #0f1a15;
+  color: #eaf5ee;
+  font-size: 14px;
+}
+
+.bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  @include row-stack(12px);
+  margin-bottom: 16px;
+}
+
+.bar-actions {
+  display: flex;
+  flex-wrap: wrap;
+  @include wrap-stack(8px, 8px);
+}
+
+h1 {
+  margin: 0;
+  font-size: 22px;
+}
+
+h2 {
+  margin: 0 0 12px;
+  font-size: 15px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #7cb897;
+}
+
+.sub {
+  margin: 4px 0 0;
+  font-size: 12px;
+  color: rgba(234, 245, 238, 0.6);
+}
+
+.warn {
+  margin: 0 0 16px;
+  padding: 10px 14px;
+  border-radius: 12px;
+  background: rgba(232, 93, 76, 0.16);
+  border: 1px solid rgba(232, 93, 76, 0.45);
+  color: #ffd9d3;
+}
+
+.card {
+  margin-bottom: 16px;
+  padding: 16px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  @include row-stack(12px);
+  margin-bottom: 10px;
+}
+
+label {
+  width: 130px;
+  flex-shrink: 0;
+  color: rgba(234, 245, 238, 0.72);
+}
+
+input {
+  flex: 1;
+  min-width: 0;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: rgba(0, 0, 0, 0.28);
+  color: #eaf5ee;
+  font: inherit;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  @include wrap-stack(10px, 10px);
+  margin-top: 12px;
+}
+
+.btn {
+  padding: 10px 16px;
+  border: 0;
+  border-radius: 10px;
+  background: #1f6b4a;
+  color: #fff;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.btn.ghost {
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.24);
+  color: #eaf5ee;
+}
+
+.btn.danger {
+  background: #9b2f24;
+}
+
+.btn:disabled {
+  opacity: 0.45;
+}
+
+.btn.is-loading {
+  cursor: wait;
+}
+
+.btn.is-loading::before {
+  content: '';
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  margin-right: 8px;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.35);
+  border-top-color: #fff;
+  vertical-align: -2px;
+  animation: btn-spin 0.7s linear infinite;
+}
+
+.btn.is-loading:disabled {
+  opacity: 0.9;
+}
+
+@keyframes btn-spin {
+  to { transform: rotate(360deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .btn.is-loading::before {
+    animation: none;
+    border-top-color: rgba(255, 255, 255, 0.35);
+    opacity: 0.8;
+  }
+}
+
+.hint {
+  margin: 10px 0 0;
+  font-size: 12px;
+  color: rgba(234, 245, 238, 0.55);
+}
+
+.busy {
+  margin: 0 0 10px;
+  color: #d8b36a;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.cell {
+  padding: 8px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  font-size: 11px;
+  overflow: hidden;
+}
+
+.cell strong {
+  display: block;
+  font-size: 14px;
+}
+
+.cell span {
+  display: block;
+  margin-top: 2px;
+  color: rgba(234, 245, 238, 0.6);
+}
+
+.cell.ok {
+  border-color: rgba(124, 184, 151, 0.7);
+  background: rgba(124, 184, 151, 0.14);
+}
+
+.cell.bad {
+  border-color: rgba(232, 93, 76, 0.7);
+  background: rgba(232, 93, 76, 0.14);
+}
+
+.kv {
+  display: grid;
+  grid-template-columns: 130px minmax(0, 1fr);
+  gap: 6px 12px;
+  margin: 0;
+}
+
+.kv dt {
+  color: rgba(234, 245, 238, 0.72);
+}
+
+.kv dd {
+  margin: 0;
+  min-width: 0;
+  word-break: break-all;
+}
+
+.kv dd code {
+  font-size: 12px;
+  color: #cfe6d9;
+}
+
+.kv dd.hot {
+  color: #f0b46a;
+}
+
+.kv dd.cold {
+  color: #7cb897;
+}
+
+.kv dd.bad {
+  color: #ff9d8f;
+}
+
+.confirm {
+  margin-top: 12px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: rgba(232, 93, 76, 0.12);
+  border: 1px solid rgba(232, 93, 76, 0.45);
+}
+
+.confirm p {
+  margin: 0;
+  color: #ffd9d3;
+}
+
+.log {
+  margin: 12px 0 0;
+  padding: 0;
+  list-style: none;
+  max-height: 260px;
+  overflow-y: auto;
+  font-size: 12px;
+}
+
+.log li {
+  padding: 5px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+  word-break: break-all;
+}
+
+.log li.bad {
+  color: #ff9d8f;
+}
+
+.log code {
+  margin-right: 8px;
+  color: rgba(234, 245, 238, 0.45);
+}

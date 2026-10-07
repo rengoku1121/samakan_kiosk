@@ -1,0 +1,73 @@
+:root {
+  --samakan-ink: #14231c;
+  --samakan-ink-soft: #3d5248;
+  --samakan-mint: #d8f3e5;
+  --samakan-sage: #7cb897;
+  --samakan-forest: #1f6b4a;
+  --samakan-coral: #e85d4c;
+  --samakan-coral-deep: #c94334;
+  --samakan-cream: #f7faf8;
+  --samakan-glow: rgba(232, 93, 76, 0.35);
+
+  /*
+   * Safe-area. Nilai dasar 0px karena panel XY tidak punya notch.
+   * env() baru ada di Chrome 69; di dalam custom property nilainya tetap
+   * tersimpan lalu gagal saat dipakai, sehingga SEMUA turunannya ikut invalid
+   * dan properti pemakainya jatuh ke nilai awal (padding jadi 0).
+   * Karena itu env() hanya diisi lewat @supports di bawah.
+   */
+  --safe-top: 0px;
+  --safe-right: 0px;
+  --safe-bottom: 0px;
+  --safe-left: 0px;
+
+  /*
+   * Inset panggung. Semua nilai dasar wajib px murni — clamp()/min() belum ada
+   * di Chrome 66 dan akan melumpuhkan seluruh rantai calc() di bawahnya.
+   * Nilai per ukuran layar diatur media query di global.scss.
+   */
+  --kiosk-pad-x: 20px;
+  --kiosk-pad-y: 20px;
+  /* Frame kaca/besi mesin — 0 di ponsel, naik di panel besar. */
+  --kiosk-bezel: 0px;
+  --kiosk-inset-x: calc(var(--kiosk-pad-x) + var(--kiosk-bezel));
+  --kiosk-inset-y: calc(var(--kiosk-pad-y) + var(--kiosk-bezel));
+  --kiosk-stage-pad:
+    calc(var(--kiosk-inset-y) + var(--safe-top))
+    calc(var(--kiosk-inset-x) + var(--safe-right))
+    calc(var(--kiosk-inset-y) + var(--safe-bottom))
+    calc(var(--kiosk-inset-x) + var(--safe-left));
+  --kiosk-dock-clear: calc(148px + var(--safe-bottom) + var(--kiosk-inset-y));
+  /* Dipasangkan dengan width:100% — pengganti min(1120px, 100%). */
+  --kiosk-max-content: 1120px;
+
+  --ion-color-primary: #1f6b4a;
+  --ion-color-primary-rgb: 31, 107, 74;
+  --ion-color-primary-contrast: #ffffff;
+  --ion-color-primary-contrast-rgb: 255, 255, 255;
+  --ion-color-primary-shade: #1b5e41;
+  --ion-color-primary-tint: #357a5c;
+
+  --ion-background-color: var(--samakan-cream);
+  --ion-text-color: var(--samakan-ink);
+
+  --ion-font-family: "Sora", "Segoe UI", sans-serif;
+}
+
+/* Hanya browser yang mengerti env() yang memakai safe-area sungguhan. */
+@supports (padding: env(safe-area-inset-top)) {
+  :root {
+    --safe-top: env(safe-area-inset-top, 0px);
+    --safe-right: env(safe-area-inset-right, 0px);
+    --safe-bottom: env(safe-area-inset-bottom, 0px);
+    --safe-left: env(safe-area-inset-left, 0px);
+  }
+}
+
+/* Kiosk selalu light — jangan ikut system dark */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --ion-background-color: var(--samakan-cream);
+    --ion-text-color: var(--samakan-ink);
+  }
+}

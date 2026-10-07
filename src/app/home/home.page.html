@@ -1,0 +1,83 @@
+<ion-content [fullscreen]="true" class="home-content">
+  <div class="stage" [class.is-pulse]="started">
+    <div class="aurora" aria-hidden="true">
+      <span class="glow glow-a"></span>
+      <span class="glow glow-b"></span>
+      <span class="glow glow-c"></span>
+    </div>
+
+    <header class="top-meta">
+      <span class="machine-pill" (click)="onMachineTap()">{{ machineCode }}</span>
+      <span class="ver" *ngIf="showVersion">v{{ appVersion }}</span>
+    </header>
+
+    <main class="hero">
+      <img
+        class="logo anim-1"
+        src="assets/img/Samakan_Logo-01.png"
+        alt="Samakan"
+      />
+
+      <ol class="ritual anim-3">
+        <li>
+          <span class="ritual-n">1</span>
+          <span class="ritual-t">Pilih</span>
+        </li>
+        <li>
+          <span class="ritual-n">2</span>
+          <span class="ritual-t">Bayar QRIS</span>
+        </li>
+        <li>
+          <span class="ritual-n">3</span>
+          <span class="ritual-t">Ambil hangat</span>
+        </li>
+      </ol>
+
+      <div class="dev-exit anim-3" *ngIf="showDevExit">
+        <button type="button" class="dev-exit-btn" [disabled]="closing" (click)="closeApp()">
+          Tutup aplikasi
+        </button>
+        <p class="dev-exit-hint">Hanya tampil di build development</p>
+      </div>
+
+      <div class="hero-actions anim-4">
+        <button
+          type="button"
+          class="cta"
+          (click)="onStart()"
+          [attr.aria-busy]="started"
+        >
+          <span class="cta-label">{{ started ? 'Menyiapkan…' : 'Mulai Pesan' }}</span>
+          <span class="cta-arrow" aria-hidden="true">→</span>
+        </button>
+        <p class="hint anim-5">Sentuh untuk memilih menu</p>
+      </div>
+
+      <footer class="foot">
+        <span class="foot-item">Bayar QRIS</span>
+        <span class="dot" aria-hidden="true"></span>
+        <span class="foot-item">Ambil di mesin ini</span>
+      </footer>
+    </main>
+
+    <div class="gate" *ngIf="gateOpen" (click)="cancelGate()">
+      <form class="gate-card" (click)="$event.stopPropagation()" (ngSubmit)="submitGate()">
+        <h2>Mode Servis</h2>
+        <p>Masukkan password mesin ini.</p>
+        <input
+          type="password"
+          name="serviceGate"
+          [(ngModel)]="gatePassword"
+          autocomplete="off"
+          autofocus
+          placeholder="Password"
+        />
+        <p class="gate-error" *ngIf="gateError">Password salah.</p>
+        <div class="gate-actions">
+          <button type="button" class="gate-cancel" (click)="cancelGate()">Batal</button>
+          <button type="submit" class="gate-ok">Masuk</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</ion-content>

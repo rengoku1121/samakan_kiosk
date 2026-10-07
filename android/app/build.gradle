@@ -1,0 +1,121 @@
+apply plugin: 'com.android.application'
+
+// Release signing config dibaca dari:
+// android/keystore.properties
+//
+// File ini JANGAN di-commit ke Git.
+//
+// Contoh:
+// storeFile=samakan-release.keystore
+// storePassword=xxxx
+// keyAlias=samakan
+// keyPassword=xxxx
+
+def keystorePropsFile = rootProject.file("keystore.properties")
+def keystoreProps = new Properties()
+
+if (keystorePropsFile.exists()) {
+  keystorePropsFile.withInputStream { stream ->
+    keystoreProps.load(stream)
+  }
+}
+
+android {
+  namespace = "id.samakan.kiosk"
+  compileSdk = rootProject.ext.compileSdkVersion
+
+  defaultConfig {
+    applicationId "id.samakan.kiosk"
+
+    minSdkVersion rootProject.ext.minSdkVersion
+    targetSdkVersion rootProject.ext.targetSdkVersion
+
+    versionCode 2
+    versionName "1.1.0"
+
+    testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+
+    aaptOptions {
+      ignoreAssetsPattern = '!.svn:!.git:!.ds_store:!*.scc:.*:!CVS:!thumbs.db:!picasa.ini:!*~'
+    }
+
+    externalNativeBuild {
+      cmake {
+        cppFlags ""
+        abiFilters "armeabi-v7a", "arm64-v8a"
+      }
+    }
+
+    ndk {
+      abiFilters "armeabi-v7a", "arm64-v8a"
+    }
+  }
+
+  externalNativeBuild {
+    cmake {
+      path file("src/main/cpp/CMakeLists.txt")
+      version "3.22.1"
+    }
+  }
+
+  signingConfigs {
+    release {
+      if (keystoreProps.containsKey("storeFile")) {
+        storeFile rootProject.file(keystoreProps["storeFile"])
+        storePassword keystoreProps["storePassword"]
+        keyAlias keystoreProps["keyAlias"]
+        keyPassword keystoreProps["keyPassword"]
+      }
+    }
+  }
+
+  buildTypes {
+    release {
+      minifyEnabled false
+
+      proguardFiles(
+        getDefaultProguardFile('proguard-android.txt'),
+        'proguard-rules.pro'
+      )
+
+      if (keystoreProps.containsKey("storeFile")) {
+        signingConfig signingConfigs.release
+      }
+    }
+  }
+}
+
+repositories {
+  flatDir {
+    dirs '../capacitor-cordova-android-plugins/src/main/libs', 'libs'
+  }
+}
+
+dependencies {
+  implementation fileTree(include: ['*.jar'], dir: 'libs')
+
+  implementation "androidx.appcompat:appcompat:$androidxAppCompatVersion"
+  implementation "androidx.coordinatorlayout:coordinatorlayout:$androidxCoordinatorLayoutVersion"
+  implementation "androidx.core:core-splashscreen:$coreSplashScreenVersion"
+
+  implementation project(':capacitor-android')
+  implementation project(':capacitor-cordova-android-plugins')
+
+  testImplementation "junit:junit:$junitVersion"
+  androidTestImplementation "androidx.test.ext:junit:$androidxJunitVersion"
+  androidTestImplementation "androidx.test.espresso:espresso-core:$androidxEspressoCoreVersion"
+}
+
+apply from: 'capacitor.build.gradle'
+
+try {
+  def servicesJSON = file('google-services.json')
+
+  if (servicesJSON.text) {
+    apply plugin: 'com.google.gms.google-services'
+  }
+} catch (Exception e) {
+  logger.info(
+    "google-services.json not found, google-services plugin not applied. Push Notifications won't work"
+  )
+}

@@ -1,0 +1,124 @@
+/*
+ * App Global CSS
+ */
+
+@import "./theme/variables.scss";
+
+@import "@ionic/angular/css/core.css";
+@import "@ionic/angular/css/normalize.css";
+@import "@ionic/angular/css/structure.css";
+@import "@ionic/angular/css/typography.css";
+@import "@ionic/angular/css/display.css";
+@import "@ionic/angular/css/padding.css";
+@import "@ionic/angular/css/float-elements.css";
+@import "@ionic/angular/css/text-alignment.css";
+@import "@ionic/angular/css/text-transformation.css";
+@import "@ionic/angular/css/flex-utils.css";
+
+/* Force light kiosk surface (no system dark palette) */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  height: 100%;
+  width: 100%;
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+html,
+body,
+ion-app,
+ion-router-outlet,
+ion-content {
+  height: 100%;
+  max-width: 100%;
+}
+
+body {
+  margin: 0;
+  min-height: 100%;
+  min-height: 100vh;
+  min-height: 100dvh;
+  overflow-x: hidden;
+  font-family: "Sora", "Segoe UI", sans-serif;
+  color: var(--samakan-ink, #14231c);
+  background: var(--samakan-cream, #f7faf8);
+  -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none;
+  user-select: none;
+}
+
+ion-app,
+ion-router-outlet {
+  width: 100%;
+}
+
+ion-content {
+  --background: transparent;
+  --padding-start: 0;
+  --padding-end: 0;
+  --padding-top: 0;
+  --padding-bottom: 0;
+  --offset-top: 0px;
+  --offset-bottom: 0px;
+}
+
+/* Shared stage shell: padding + safe-area di semua platform */
+.stage {
+  position: relative;
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 100%;
+  min-height: 100%;
+  min-height: 100vh;
+  min-height: 100dvh;
+  /* Literal dulu: kalau custom property gagal di WebView 66, inset tidak jadi 0. */
+  padding: 20px;
+  padding: var(--kiosk-stage-pad);
+  overflow-x: hidden;
+}
+
+/* Tablet */
+@media (min-width: 600px) {
+  :root {
+    --kiosk-pad-x: 28px;
+    --kiosk-pad-y: 24px;
+    --kiosk-bezel: 4px;
+  }
+}
+
+/*
+ * Panel vending XY: viewport 1080x1864 px CSS (1080p, density 160, DPR 1).
+ * Inset harus jauh lebih besar dari ponsel — 20px di layar selebar 1080px
+ * terlihat seperti tanpa margin sama sekali.
+ */
+@media (min-width: 900px) {
+  :root {
+    --kiosk-pad-x: 56px;
+    --kiosk-pad-y: 40px;
+    --kiosk-bezel: 16px;
+    --kiosk-dock-clear: calc(240px + var(--safe-bottom) + var(--kiosk-inset-y));
+  }
+}
+
+@media (min-width: 1280px) {
+  :root {
+    --kiosk-pad-x: 72px;
+    --kiosk-pad-y: 48px;
+    --kiosk-bezel: 24px;
+  }
+}
+
+/* Landscape phone / short panels */
+@media (max-height: 500px) and (orientation: landscape) {
+  :root {
+    --kiosk-pad-x: 24px;
+    --kiosk-pad-y: 14px;
+    --kiosk-bezel: 2px;
+  }
+}

@@ -1,0 +1,391 @@
+@import "../../theme/compat";
+
+.payment-content {
+  --background: transparent;
+}
+
+.stage {
+  display: flex;
+  flex-direction: column;
+  background:
+    radial-gradient(120% 70% at 0% 0%, #e8faf1 0%, transparent 55%),
+    radial-gradient(90% 60% at 100% 10%, #ffe8e3 0%, transparent 50%),
+    linear-gradient(165deg, #f7faf8 0%, #eef7f2 48%, #f8f3ef 100%);
+}
+
+.stage-atmosphere {
+  position: absolute;
+  @include fill;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.blob {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(36px);
+  opacity: 0.35;
+}
+
+.blob-a {
+  width: 200px;
+  height: 200px;
+  background: #9fd9b8;
+  top: -48px;
+  right: -56px;
+}
+
+.blob-b {
+  width: 180px;
+  height: 180px;
+  background: #f7b4a8;
+  bottom: 18%;
+  left: -64px;
+}
+
+.top-bar {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: 44px 1fr auto;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.back-btn {
+  width: 44px;
+  height: 44px;
+  border: 1px solid rgba(31, 107, 74, 0.14);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.78);
+  color: var(--samakan-ink);
+  font-size: 20px;
+  line-height: 1;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.top-copy {
+  min-width: 0;
+  text-align: center;
+}
+
+.brand {
+  margin: 0;
+  font-family: "Fraunces", Georgia, serif;
+  font-size: 22px;
+  font-weight: 700;
+  line-height: 1.1;
+  color: var(--samakan-ink);
+}
+
+.sub {
+  margin: 2px 0 0;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--samakan-ink-soft);
+}
+
+.step-pill,
+.mock-pill {
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: rgba(31, 107, 74, 0.1);
+  color: var(--samakan-forest);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+
+.panel {
+  position: relative;
+  z-index: 1;
+  flex: 1;
+  width: 100%;
+  max-width: 520px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  @include stack(16px);
+  min-height: 0;
+}
+
+.status-msg {
+  margin: 48px 0 0;
+  text-align: center;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--samakan-ink-soft);
+}
+
+.status-msg.error {
+  color: var(--samakan-coral-deep);
+}
+
+.order-summary {
+  width: 100%;
+  text-align: center;
+}
+
+.product {
+  margin: 0;
+  font-family: "Fraunces", Georgia, serif;
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--samakan-ink);
+  line-height: 1.2;
+}
+
+.meta {
+  margin: 6px 0 0;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--samakan-ink-soft);
+}
+
+.amount {
+  margin: 10px 0 0;
+  font-size: 28px;
+  font-weight: 800;
+  color: var(--samakan-coral-deep);
+}
+
+/* Kotak QR dibuat persegi lewat width+height, bukan aspect-ratio (Chrome 66). */
+.qr-wrap {
+  position: relative;
+  width: 280px;
+  height: 280px;
+  max-width: 100%;
+  padding: 14px;
+  border-radius: 24px;
+  background: #fff;
+  box-shadow: 0 18px 40px rgba(20, 35, 28, 0.12);
+}
+
+.qr-wrap.is-dim .qr {
+  filter: grayscale(0.4) opacity(0.35);
+}
+
+.qr {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+}
+
+.qr-mask {
+  position: absolute;
+  @include fill;
+  display: grid;
+  place-items: center;
+  border-radius: 24px;
+  background: rgba(20, 35, 28, 0.35);
+}
+
+.qr-mask span {
+  padding: 10px 16px;
+  border-radius: 999px;
+  background: #fff;
+  color: var(--samakan-ink);
+  font-size: 14px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.pay-copy {
+  text-align: center;
+}
+
+.scan-title {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--samakan-ink);
+}
+
+.timer {
+  margin: 8px 0 0;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--samakan-ink-soft);
+}
+
+.timer strong {
+  font-variant-numeric: tabular-nums;
+  color: var(--samakan-forest);
+}
+
+.order-code {
+  margin: 6px 0 0;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: var(--samakan-ink-soft);
+  opacity: 0.85;
+}
+
+.mock-pill {
+  display: inline-block;
+  margin-top: 10px;
+}
+
+.actions {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: 1fr;
+  gap: 10px;
+  width: 100%;
+  max-width: 520px;
+  margin: 12px auto 0;
+}
+
+.btn-ghost,
+.btn-sim,
+.btn-retry {
+  min-height: 52px;
+  border-radius: 999px;
+  font-family: inherit;
+  font-size: 15px;
+  font-weight: 800;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.btn-ghost,
+.btn-retry {
+  border: 1px solid rgba(31, 107, 74, 0.18);
+  background: rgba(255, 255, 255, 0.82);
+  color: var(--samakan-ink);
+}
+
+.btn-ghost.wide,
+.btn-sim.wide {
+  width: 100%;
+  max-width: 280px;
+  margin: 0 auto;
+}
+
+.error-actions {
+  display: flex;
+  flex-direction: column;
+  @include stack(10px);
+  width: 100%;
+  max-width: 280px;
+  margin-top: 8px;
+}
+
+.btn-sim {
+  border: 0;
+  background: linear-gradient(135deg, var(--samakan-coral), var(--samakan-coral-deep));
+  color: #fff;
+  box-shadow: 0 14px 28px rgba(232, 93, 76, 0.28);
+}
+
+.btn-ghost:active,
+.btn-sim:active,
+.btn-retry:active {
+  transform: scale(0.985);
+}
+
+.anim-1,
+.anim-2,
+.anim-3 {
+  animation: riseIn 0.42s ease both;
+}
+
+.anim-2 {
+  animation-delay: 0.06s;
+}
+
+.anim-3 {
+  animation-delay: 0.12s;
+}
+
+@keyframes riseIn {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (min-width: 700px) {
+  .product {
+    font-size: 28px;
+  }
+
+  .amount {
+    font-size: 32px;
+  }
+
+  .qr-wrap {
+    width: 320px;
+    height: 320px;
+  }
+}
+
+/* Panel vending: QR harus terbaca dari jarak berdiri. */
+@media (min-width: 900px) {
+  .panel {
+    justify-content: center;
+    @include stack(22px);
+  }
+
+  .product {
+    font-size: 34px;
+  }
+
+  .meta {
+    font-size: 17px;
+  }
+
+  .amount {
+    font-size: 40px;
+  }
+
+  .qr-wrap {
+    width: 400px;
+    height: 400px;
+    padding: 18px;
+    border-radius: 28px;
+  }
+
+  .scan-title {
+    font-size: 20px;
+  }
+
+  .timer {
+    font-size: 18px;
+  }
+
+  .order-code {
+    font-size: 14px;
+  }
+
+  .actions {
+    max-width: 560px;
+  }
+
+  .btn-ghost,
+  .btn-sim,
+  .btn-retry {
+    min-height: 64px;
+    font-size: 18px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .anim-1,
+  .anim-2,
+  .anim-3 {
+    animation: none !important;
+  }
+}

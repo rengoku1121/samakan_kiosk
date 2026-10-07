@@ -1,0 +1,49 @@
+/*
+ * Kompatibilitas WebView panel vending XY.
+ *
+ * Panel memakai Android System WebView 66 (Chrome 66) dan itu satu-satunya
+ * provider yang tersedia di ROM-nya, jadi CSS kiosk harus jalan di sana.
+ * Fitur berikut BELUM ada di Chrome 66 — jangan dipakai di stylesheet kiosk:
+ *
+ *   gap pada flexbox      → Chrome 84   (pakai @include stack / row-stack)
+ *   clamp() min() max()   → Chrome 79   (pakai px bertingkat per media query)
+ *   inset shorthand       → Chrome 87   (pakai @include fill)
+ *   aspect-ratio          → Chrome 88   (pakai padding-bottom + @supports)
+ *   unit dvh              → Chrome 108  (selalu sediakan vh lebih dulu)
+ *   env() di custom prop  → Chrome 69   (isi lewat @supports, lihat variables)
+ *
+ * gap pada CSS Grid sudah didukung Chrome 66, jadi grid boleh tetap pakai gap.
+ */
+
+/// Ganti `inset` shorthand.
+@mixin fill($top: 0, $right: 0, $bottom: 0, $left: 0) {
+  top: $top;
+  right: $right;
+  bottom: $bottom;
+  left: $left;
+}
+
+/// Jarak antar anak pada flex column. Pengganti `gap` yang tidak jalan di Chrome 66.
+@mixin stack($space) {
+  > * + * {
+    margin-top: $space;
+  }
+}
+
+/// Jarak antar anak pada flex row satu baris.
+@mixin row-stack($space) {
+  > * + * {
+    margin-left: $space;
+  }
+}
+
+/// Jarak untuk flex row yang boleh membungkus ke baris berikutnya.
+@mixin wrap-stack($row, $column) {
+  margin-top: -$row;
+  margin-left: -$column;
+
+  > * {
+    margin-top: $row;
+    margin-left: $column;
+  }
+}

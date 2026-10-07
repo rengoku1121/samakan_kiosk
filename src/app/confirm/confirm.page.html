@@ -1,0 +1,105 @@
+<ion-content [fullscreen]="true" class="confirm-content" *ngIf="item as sel">
+  <div class="stage">
+    <div class="stage-atmosphere" aria-hidden="true">
+      <div class="blob blob-a"></div>
+      <div class="blob blob-b"></div>
+    </div>
+
+    <header class="top-bar">
+      <button type="button" class="back-btn" (click)="goBack()" aria-label="Kembali">
+        ←
+      </button>
+      <div class="top-copy">
+        <p class="brand">{{ brand }}</p>
+        <p class="sub">Konfirmasi pesanan</p>
+      </div>
+      <span class="step-pill">1 / 2</span>
+    </header>
+
+    <main class="panel">
+      <div class="hero-media anim-1">
+        <img
+          class="photo"
+          [src]="sel.image_url"
+          [alt]="sel.product_name"
+          (error)="onImgError($event)"
+        />
+      </div>
+
+      <div class="copy anim-2">
+        <h1 class="title">{{ sel.product_name }}</h1>
+        <p class="desc">{{ sel.desc }}</p>
+
+        <dl class="facts">
+          <div class="fact">
+            <dt>Harga</dt>
+            <dd class="price">{{ priceFmt(sel.price) }}</dd>
+          </div>
+          <div class="fact" *ngIf="isSlotMode">
+            <dt>Slot</dt>
+            <dd>{{ sel.slot_code }}</dd>
+          </div>
+          <div class="fact" *ngIf="!isSlotMode">
+            <dt>Stok</dt>
+            <dd>Sisa {{ sel.stock }}</dd>
+          </div>
+          <div class="fact">
+            <dt>Jumlah</dt>
+            <dd>1</dd>
+          </div>
+        </dl>
+      </div>
+
+      <section class="heat anim-2" aria-labelledby="heat-title">
+        <h2 id="heat-title" class="heat-title">Mau dipanaskan?</h2>
+        <p class="heat-lede" *ngIf="sel.requires_heating">
+          Menu ini <strong>wajib dipanaskan</strong> sebelum diambil.
+        </p>
+        <p class="heat-lede" *ngIf="!sel.requires_heating">
+          Boleh dipanaskan atau disajikan dingin — terserah kamu.
+        </p>
+
+        <div class="heat-options" role="group" aria-label="Pilihan pemanasan">
+          <button
+            type="button"
+            class="heat-btn"
+            [class.is-active]="heatChoice === true"
+            (click)="chooseHeat(true)"
+          >
+            <span class="heat-btn-label">Dipanaskan</span>
+            <span class="heat-btn-hint">Hangat siap makan</span>
+          </button>
+          <button
+            type="button"
+            class="heat-btn"
+            [class.is-active]="heatChoice === false"
+            [class.is-blocked]="sel.requires_heating"
+            (click)="chooseHeat(false)"
+          >
+            <span class="heat-btn-label">Tidak dipanaskan</span>
+            <span class="heat-btn-hint" *ngIf="!sel.requires_heating">Sajikan dingin</span>
+            <span class="heat-btn-hint" *ngIf="sel.requires_heating">Tidak tersedia</span>
+          </button>
+        </div>
+
+        <p class="heat-error" *ngIf="heatError" role="alert">{{ heatError }}</p>
+        <p class="heat-notice" *ngIf="slotNotice">{{ slotNotice }}</p>
+        <p class="heat-error" *ngIf="slotError" role="alert">{{ slotError }}</p>
+        <p class="heat-lede" *ngIf="checkingSlot">Mengecek slot di mesin…</p>
+      </section>
+    </main>
+
+    <footer class="actions anim-3">
+      <button type="button" class="btn-ghost" (click)="goBack()">Ganti menu</button>
+      <button
+        type="button"
+        class="btn-pay"
+        [disabled]="!canContinue || checkingSlot"
+        (click)="onContinue()"
+      >
+        {{ checkingSlot ? 'Mengecek slot…' : 'Lanjut bayar' }}
+        <span aria-hidden="true">→</span>
+      </button>
+    </footer>
+  </div>
+</ion-content>

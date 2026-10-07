@@ -1,0 +1,26 @@
+<ion-content [fullscreen]="true" class="success-content">
+  <div class="stage" *ngIf="session as pay">
+    <div class="stage-atmosphere" aria-hidden="true">
+      <div class="blob blob-a"></div>
+      <div class="blob blob-b"></div>
+    </div>
+
+    <main class="panel">
+      <div class="mark anim-1" aria-hidden="true">✓</div>
+      <p class="brand anim-1">{{ brand }}</p>
+      <h1 class="title anim-2">Silakan ambil</h1>
+      <p class="sub anim-2">Pembayaran lunas dan produk sudah dikeluarkan.</p>
+
+      <div class="summary anim-3">
+        <p class="product">{{ pay.product_name }}</p>
+        <p class="meta">Slot {{ pay.slot_code }} · {{ pay.heat_requested ? 'Dipanaskan' : 'Tidak dipanaskan' }}</p>
+        <p class="amount">{{ priceFmt(pay.price) }}</p>
+        <p class="order-code">{{ pay.order_code }}</p>
+      </div>
+    </main>
+
+    <footer class="actions anim-4">
+      <button type="button" class="btn-done" (click)="done()">Selesai</button>
+    </footer>
+  </div>
+</ion-content>

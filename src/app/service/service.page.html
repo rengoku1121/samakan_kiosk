@@ -1,0 +1,366 @@
+<ion-content [fullscreen]="true" class="service-content">
+  <div class="stage">
+    <header class="bar">
+      <div>
+        <h1>Mode Servis</h1>
+        <p class="sub">Uji VMC tanpa transaksi · v{{ appVersion }} · {{ runtimeMode }}</p>
+      </div>
+      <div class="bar-actions">
+        <button type="button" class="btn ghost" (click)="exit()">Kembali</button>
+        <button type="button" class="btn danger" [class.is-loading]="closing" [disabled]="closing" (click)="closeApp()">
+          Tutup aplikasi
+        </button>
+      </div>
+    </header>
+
+    <p class="warn" *ngIf="isDevToken">
+      Token kiosk masih token contoh. Isi token produksi sebelum menerima pembayaran.
+    </p>
+
+    <section class="card">
+      <h2>Uji slot</h2>
+      <div class="row">
+        <label for="slot">Nomor slot</label>
+        <input
+          id="slot"
+          type="text"
+          inputmode="numeric"
+          [(ngModel)]="slotCode"
+          name="slot"
+          [disabled]="busy || confirmOpen"
+        />
+      </div>
+      <div class="actions">
+        <button type="button" class="btn" [class.is-loading]="isLoading('check')" [disabled]="busy" (click)="checkOne()">
+          Cek 0x01
+        </button>
+        <button
+          type="button"
+          class="btn"
+          [class.is-loading]="isLoading('cold')"
+          [disabled]="busy || confirmOpen"
+          (click)="askTestDispense(false)"
+        >
+          Dispense dingin
+        </button>
+        <button
+          type="button"
+          class="btn"
+          [class.is-loading]="isLoading('hot')"
+          [disabled]="busy || confirmOpen"
+          (click)="askTestDispense(true)"
+        >
+          Dispense panas
+        </button>
+        <button
+          type="button"
+          class="btn ghost"
+          [class.is-loading]="isLoading('vmc')"
+          [disabled]="busy"
+          (click)="checkVmcStatus()"
+        >
+          Cek status VMC
+        </button>
+      </div>
+      <div class="confirm" *ngIf="confirmOpen">
+        <p>
+          Jatuhkan produk di slot {{ confirmSlot }} ({{ confirmHeat ? 'panas' : 'dingin' }})?
+          Produk benar-benar keluar. Stok tidak berkurang.
+        </p>
+        <div class="actions">
+          <button type="button" class="btn ghost" (click)="cancelTestDispense()">Batal</button>
+          <button type="button" class="btn danger" [disabled]="busy" (click)="runTestDispense()">Jatuhkan</button>
+        </div>
+      </div>
+      <p class="hint">Dispense uji tidak membuat order dan tidak mengurangi stok.</p>
+      <p class="hint">
+        Dispense uji selalu cek 0x01 dulu. Kalau slot tidak siap, motor tidak dijalankan.
+      </p>
+      <p class="hint">Cek 0x01 menulis frame kirim, ACK, dan balasan 0x02 apa adanya ke Log.</p>
+      <p class="hint">Cek status VMC mengirim 0x53 dan menulis hex balasan apa adanya ke Log.</p>
+
+      <p class="hint" *ngIf="!lastCheck">Belum ada cek slot sejak halaman ini dibuka.</p>
+      <dl class="kv" *ngIf="lastCheck?.trace as t">
+        <dt>Hasil</dt>
+        <dd [class.bad]="lastCheck?.ok === false">
+          {{ lastCheck?.ok ? 'SIAP' : 'TIDAK SIAP' }} · {{ lastCheck?.detail }}
+        </dd>
+        <dt>Kirim 0x01</dt>
+        <dd><code>{{ t.sentHex || '—' }}</code></dd>
+        <dt>ACK</dt>
+        <dd><code>{{ t.ackHex || '—' }}</code></dd>
+        <dt>Balasan 0x02</dt>
+        <dd><code>{{ t.replyHex || '—' }}</code></dd>
+        <dt>Result byte</dt>
+        <dd [class.bad]="lastCheck?.ok === false">
+          {{ byteHex(t.result) }} · {{ t.resultLabel || '—' }}
+        </dd>
+        <dt>Selection</dt>
+        <dd>{{ selectionEcho(t) }}</dd>
+        <dt>Payload</dt>
+        <dd><code>{{ t.payloadHex || '—' }}</code></dd>
+      </dl>
+    </section>
+
+    <section class="card">
+      <h2>Perintah terakhir</h2>
+      <p class="hint" *ngIf="!lastDrive">Belum ada perintah 0x06 sejak aplikasi dibuka.</p>
+      <dl class="kv" *ngIf="lastDrive">
+        <dt>Waktu</dt>
+        <dd>{{ lastDriveAt }} · {{ lastDrive.mode }}</dd>
+        <dt>Slot</dt>
+        <dd>{{ lastDrive.slotCode }} · PackNO {{ lastDrive.packNo }}</dd>
+        <dt>Pemanas</dt>
+        <dd [class.hot]="lastDrive.heat" [class.cold]="!lastDrive.heat">
+          {{ lastDrive.heat ? 'panas' : 'dingin' }} · elevator={{ lastDrive.elevator }}
+        </dd>
+        <dt>Status VMC</dt>
+        <dd [class.bad]="lastDrive.ok === false">{{ lastDriveStatus }}</dd>
+        <dt>Frame 0x06</dt>
+        <dd><code>{{ lastDrive.hex }}</code></dd>
+      </dl>
+      <p class="hint">
+        Tes dingin harus menampilkan <code>elevator=0</code>; tes panas <code>elevator=1</code>.
+      </p>
+    </section>
+
+    <section class="card">
+      <h2>Slot jammed</h2>
+      <div class="actions">
+        <button
+          type="button"
+          class="btn ghost"
+          [class.is-loading]="isLoading('jam-check')"
+          [disabled]="busy"
+          (click)="checkJammed()"
+        >
+          Cek jammed
+        </button>
+        <button
+          type="button"
+          class="btn"
+          [class.is-loading]="isLoading('jam-clear')"
+          [disabled]="busy"
+          (click)="clearJammed()"
+        >
+          Bersihkan jammed
+        </button>
+      </div>
+      <p class="hint">
+        Keluarkan dulu produk yang nyangkut. Bersihkan jammed hanya menghapus tanda macet di VMC
+        (<code>0x70 · 0x32</code>); motor tidak berputar. Setelah itu cek slot dengan Cek 0x01.
+      </p>
+
+      <p class="hint" *ngIf="!jammedReport">Belum dicek sejak halaman ini dibuka.</p>
+      <dl class="kv" *ngIf="jammedReport as r">
+        <dt>Hasil</dt>
+        <dd [class.bad]="!r.ok">{{ r.ok ? 'OK' : 'GAGAL' }} · {{ r.detail }}</dd>
+        <dt>Slot jammed</dt>
+        <dd [class.bad]="!!r.jammed?.length">{{ codeList(r.jammed) }}</dd>
+        <dt>Belt gagal tes</dt>
+        <dd [class.bad]="!!r.beltFailed?.length">{{ codeList(r.beltFailed) }}</dd>
+      </dl>
+    </section>
+
+    <section class="card">
+      <h2>Scan denah {{ layoutCodes.length }} slot</h2>
+      <div class="actions">
+        <button type="button" class="btn" [class.is-loading]="isLoading('scan')" [disabled]="busy" (click)="scanAll()">
+          Mulai scan
+        </button>
+        <button type="button" class="btn ghost" [disabled]="!scanning" (click)="stopScan()">
+          Hentikan
+        </button>
+        <button type="button" class="btn ghost" [class.is-loading]="isLoading('ping')" [disabled]="busy" (click)="pingBackend()">
+          Cek backend
+        </button>
+      </div>
+
+      <p class="hint" *ngIf="probes.length">
+        {{ scanDone }}/{{ probes.length }} diperiksa · {{ okCount }} siap · {{ failCount }} tidak siap
+      </p>
+
+      <div class="grid" *ngIf="probes.length">
+        <div
+          class="cell"
+          *ngFor="let p of probes"
+          [class.ok]="p.state === 'ok'"
+          [class.bad]="p.state === 'fail'"
+          [title]="p.detail"
+        >
+          <strong>{{ p.slot_code }}</strong>
+          <span>{{ p.detail || '—' }}</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>Identitas mesin</h2>
+      <div class="row">
+        <label for="machine">Machine code</label>
+        <input id="machine" type="text" [(ngModel)]="form.machineCode" name="machine" />
+      </div>
+      <div class="row">
+        <label for="api">API base URL</label>
+        <input id="api" type="text" [(ngModel)]="form.apiBaseUrl" name="api" />
+      </div>
+      <div class="row">
+        <label for="token">Kiosk token</label>
+        <input id="token" type="text" [(ngModel)]="form.kioskToken" name="token" />
+      </div>
+      <div class="actions">
+        <button type="button" class="btn" (click)="saveConfig()">Simpan</button>
+        <button type="button" class="btn ghost" (click)="resetConfig()">Reset bawaan</button>
+      </div>
+      <p class="hint" *ngIf="savedNote">{{ savedNote }}</p>
+      <p class="hint">Tutup dan buka ulang aplikasi setelah mengganti identitas mesin.</p>
+    </section>
+
+    <section class="card">
+      <h2>Password mode servis</h2>
+      <p class="hint" *ngIf="usesDefaultServicePassword">
+        Mesin ini masih memakai password bawaan pabrik. Ganti supaya khusus mesin ini.
+      </p>
+      <div class="row">
+        <label for="pin1">Password baru</label>
+        <input
+          id="pin1"
+          type="password"
+          [(ngModel)]="newPassword"
+          name="pin1"
+          autocomplete="new-password"
+        />
+      </div>
+      <div class="row">
+        <label for="pin2">Ulangi</label>
+        <input
+          id="pin2"
+          type="password"
+          [(ngModel)]="newPasswordAgain"
+          name="pin2"
+          autocomplete="new-password"
+        />
+      </div>
+      <div class="actions">
+        <button type="button" class="btn" (click)="saveServicePassword()">Simpan password</button>
+      </div>
+      <p class="hint" *ngIf="passwordNote">{{ passwordNote }}</p>
+      <p class="hint">Password tersimpan di mesin ini saja, tidak dikirim ke server.</p>
+    </section>
+
+    <section class="card">
+      <h2>Jaringan</h2>
+      <dl class="kv">
+        <dt>Status</dt>
+        <dd [class.bad]="!network.online">{{ network.online ? 'Terhubung' : 'Tidak terhubung' }}</dd>
+        <dt>Jenis</dt>
+        <dd>{{ network.transport || '—' }}</dd>
+        <dt>Wi-Fi</dt>
+        <dd>{{ networkSsidLabel }}</dd>
+        <dt>IP</dt>
+        <dd>{{ networkIpLabel }}</dd>
+        <dt>Jam panel</dt>
+        <dd>{{ clockLabel || '—' }}</dd>
+      </dl>
+      <div class="actions">
+        <button
+          type="button"
+          class="btn ghost"
+          [class.is-loading]="netBusy"
+          [disabled]="netBusy"
+          (click)="reloadNetwork()"
+        >
+          Perbarui
+        </button>
+      </div>
+      <p class="hint" *ngIf="networkNote">{{ networkNote }}</p>
+      <p class="hint">
+        Jam mengikuti jam panel. Nama Wi-Fi dan IP terisi di mesin Android; di browser hanya status koneksi.
+      </p>
+    </section>
+
+    <section class="card">
+      <h2>Kunci panel</h2>
+      <p class="hint">
+        Device owner:
+        {{ lock.lockTaskPermitted ? 'aktif' : 'belum di-provision' }} · Lock task:
+        {{ lock.lockTaskActive ? 'terkunci' : 'terbuka' }}
+        <ng-container *ngIf="lock.lockPaused"> · kunci dilepas</ng-container>
+        <ng-container *ngIf="lock.isDefaultHome"> · Home default</ng-container>
+      </p>
+      <div class="actions">
+        <button
+          type="button"
+          class="btn"
+          [class.is-loading]="lockBusy && lockAction === 'on'"
+          [disabled]="lockBusy"
+          (click)="toggleLockTask(true)"
+        >
+          Kunci
+        </button>
+        <button
+          type="button"
+          class="btn ghost"
+          [class.is-loading]="lockBusy && lockAction === 'off'"
+          [disabled]="lockBusy"
+          (click)="toggleLockTask(false)"
+        >
+          Lepas sementara
+        </button>
+        <button
+          type="button"
+          class="btn ghost"
+          [class.is-loading]="lockBusy && lockAction === 'settings'"
+          [disabled]="lockBusy"
+          (click)="openAndroidSettings()"
+        >
+          Buka Settings
+        </button>
+        <button type="button" class="btn danger" [class.is-loading]="closing" [disabled]="closing" (click)="closeApp()">
+          Tutup aplikasi
+        </button>
+        <button
+          type="button"
+          class="btn ghost"
+          [class.is-loading]="lockBusy && lockAction === 'refresh'"
+          [disabled]="lockBusy"
+          (click)="reloadLock()"
+        >
+          Muat ulang
+        </button>
+        <button
+          type="button"
+          class="btn ghost"
+          [class.is-loading]="reloading"
+          [disabled]="reloading"
+          (click)="reloadApp()"
+        >
+          Muat ulang aplikasi
+        </button>
+      </div>
+      <p class="hint">
+        Tutup aplikasi melepas kunci layar dulu. Kalau Samakan jadi Home default,
+        Settings Android dibuka otomatis — kalau hanya ditutup, Android akan
+        membuka kiosk lagi.
+      </p>
+      <p class="hint">Muat ulang aplikasi hanya menyegarkan halaman. Kunci panel tidak dilepas.</p>
+      <p class="hint" *ngIf="!lock.lockTaskPermitted">
+        Panel belum jadi device owner. Lock task tidak akan aktif — jalankan
+        <code>adb shell dpm set-device-owner</code> saat provisioning.
+      </p>
+    </section>
+
+    <section class="card">
+      <h2>Log</h2>
+      <p class="busy" *ngIf="busy">{{ busyLabel || 'Memproses…' }}</p>
+      <button type="button" class="btn ghost" (click)="clearLog()" [disabled]="!logs.length">
+        Bersihkan
+      </button>
+      <ul class="log">
+        <li *ngFor="let l of logs" [class.bad]="l.bad">
+          <code>{{ l.at }}</code> {{ l.text }}
+        </li>
+      </ul>
+    </section>
+  </div>
+</ion-content>

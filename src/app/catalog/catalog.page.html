@@ -1,0 +1,207 @@
+<ion-content [fullscreen]="true" class="catalog-content">
+  <div class="stage" [class.has-selection]="!!selected">
+    <div class="stage-atmosphere" aria-hidden="true">
+      <div class="blob blob-a"></div>
+      <div class="blob blob-b"></div>
+    </div>
+
+    <header class="top-bar">
+      <button type="button" class="back-btn" (click)="goHome()" aria-label="Kembali">
+        ←
+      </button>
+      <div class="top-copy">
+        <p class="brand">{{ brand }}</p>
+        <p class="sub" *ngIf="!loading && !loadError && !(pickupDoorOpen$ | async)">
+          {{ availableCount }} {{ isSlotMode ? 'slot' : 'menu' }} tersedia
+        </p>
+        <p class="sub" *ngIf="loading">Memuat menu…</p>
+        <p class="sub" *ngIf="!loading && loadError && !(pickupDoorOpen$ | async)">Gagal memuat</p>
+        <p class="sub" *ngIf="pickupDoorOpen$ | async">Lubang masih terbuka</p>
+      </div>
+      <span class="top-spacer" aria-hidden="true"></span>
+    </header>
+
+    <main class="catalog">
+      <div class="intro">
+        <h1 class="title">Menu hari ini</h1>
+        <p class="lede">{{ ledeText }}</p>
+      </div>
+
+      <div class="state-box" *ngIf="loading">
+        <p>Mengambil katalog dari mesin {{ machineCode }}…</p>
+      </div>
+
+      <div class="state-box door-wait" *ngIf="pickupDoorOpen$ | async">
+        <p>{{ pickupDoorWaitMessage }}</p>
+      </div>
+
+      <div class="state-box error" *ngIf="!loading && loadError && !(pickupDoorOpen$ | async)">
+        <p>{{ loadError }}</p>
+        <button type="button" class="retry-btn" (click)="reload()">Coba lagi</button>
+      </div>
+
+      <div class="state-box" *ngIf="!loading && !loadError && products.length === 0 && slots.length === 0">
+        <p>Belum ada menu aktif di mesin ini.</p>
+      </div>
+
+      <!-- Mode: per produk -->
+      <div
+        class="grid"
+        *ngIf="!loading && !loadError && !isSlotMode"
+        [style.--catalog-cols]="catalogColumns"
+      >
+        <button
+          type="button"
+          class="card"
+          *ngFor="let product of products"
+          [class.is-selected]="selectedProductCode === product.product_code"
+          [class.is-soldout]="product.stock <= 0"
+          [disabled]="product.stock <= 0"
+          (click)="selectProduct(product)"
+        >
+          <div class="media">
+            <img
+              class="photo"
+              [src]="product.image_url"
+              [alt]="product.product_name"
+              loading="lazy"
+              decoding="async"
+              (error)="onImgError($event)"
+            />
+            <div class="media-shade" aria-hidden="true"></div>
+            <span class="tag" *ngIf="product.tag && product.stock > 0">{{ product.tag }}</span>
+            <div class="soldout-mask" *ngIf="product.stock <= 0">
+              <span>Habis</span>
+            </div>
+          </div>
+
+          <div class="body">
+            <h2 class="name">{{ product.product_name }}</h2>
+            <p class="desc">{{ product.desc }}</p>
+            <div class="meta">
+              <span class="price">{{ priceFmt(product.price) }}</span>
+              <span class="stock" *ngIf="product.stock > 0">Sisa {{ product.stock }}</span>
+              <span class="stock soldout" *ngIf="product.stock <= 0">Tidak tersedia</span>
+            </div>
+          </div>
+        </button>
+      </div>
+
+      <!-- Mode: denah fisik mesin (001-004 … 071-074) -->
+      <ng-container *ngIf="!loading && !loadError && isSlotMode">
+        <p class="layout-hint">
+          Susunan di layar sama dengan susunan barang di mesin.
+        </p>
+
+        <div class="layout-grid" [style.--catalog-cols]="layoutColumns">
+          <button
+            type="button"
+            class="cell"
+            *ngFor="let cell of layout; trackBy: trackByCell"
+            [class.is-selected]="assignedSlotCode === cell.slot?.slot_code"
+            [class.is-soldout]="!!cell.slot && cell.slot.stock <= 0"
+            [class.is-empty]="!cell.slot"
+            [disabled]="!isCellSelectable(cell)"
+            [attr.aria-label]="
+              cell.slot
+                ? 'Slot ' + cell.slot_code + ' ' + cell.slot.product_name
+                : 'Slot ' + cell.slot_code + ' kosong'
+            "
+            (click)="selectCell(cell)"
+          >
+            <span class="cell-code">{{ cell.slot_code }}</span>
+
+            <span class="cell-media" *ngIf="cell.slot; else emptyMedia">
+              <img
+                class="cell-photo"
+                [src]="cell.slot.image_url"
+                [alt]="cell.slot.product_name"
+                loading="lazy"
+                decoding="async"
+                (error)="onImgError($event)"
+              />
+              <span class="cell-mask" *ngIf="cell.slot.stock <= 0">Habis</span>
+            </span>
+            <ng-template #emptyMedia>
+              <span class="cell-media is-blank" aria-hidden="true"></span>
+            </ng-template>
+
+            <span class="cell-body" *ngIf="cell.slot; else emptyBody">
+              <span class="cell-name">{{ cell.slot.product_name }}</span>
+              <span class="cell-price">{{ priceFmt(cell.slot.price) }}</span>
+              <span class="cell-stock" *ngIf="cell.slot.stock > 0">
+                Sisa {{ cell.slot.stock }}
+              </span>
+              <span class="cell-stock soldout" *ngIf="cell.slot.stock <= 0">Habis</span>
+            </span>
+            <ng-template #emptyBody>
+              <span class="cell-body">
+                <span class="cell-name muted">Kosong</span>
+              </span>
+            </ng-template>
+          </button>
+        </div>
+
+        <div class="extra-block" *ngIf="extraSlots.length">
+          <p class="extra-title">Slot lain di mesin</p>
+          <div class="layout-grid" [style.--catalog-cols]="layoutColumns">
+            <button
+              type="button"
+              class="cell"
+              *ngFor="let slot of extraSlots; trackBy: trackBySlot"
+              [class.is-selected]="assignedSlotCode === slot.slot_code"
+              [class.is-soldout]="slot.stock <= 0"
+              [disabled]="slot.stock <= 0"
+              (click)="selectSlot(slot)"
+            >
+              <span class="cell-code">{{ slot.slot_code }}</span>
+              <span class="cell-media">
+                <img
+                  class="cell-photo"
+                  [src]="slot.image_url"
+                  [alt]="slot.product_name"
+                  loading="lazy"
+                  decoding="async"
+                  (error)="onImgError($event)"
+                />
+                <span class="cell-mask" *ngIf="slot.stock <= 0">Habis</span>
+              </span>
+              <span class="cell-body">
+                <span class="cell-name">{{ slot.product_name }}</span>
+                <span class="cell-price">{{ priceFmt(slot.price) }}</span>
+                <span class="cell-stock" *ngIf="slot.stock > 0">Sisa {{ slot.stock }}</span>
+                <span class="cell-stock soldout" *ngIf="slot.stock <= 0">Habis</span>
+              </span>
+            </button>
+          </div>
+        </div>
+      </ng-container>
+    </main>
+
+    <div class="dock-spacer" aria-hidden="true"></div>
+  </div>
+
+  <aside class="dock" *ngIf="selected as sel">
+    <div class="dock-inner">
+      <img
+        class="dock-thumb"
+        [src]="sel.image_url"
+        [alt]="sel.product_name"
+        (error)="onImgError($event)"
+      />
+      <div class="dock-copy">
+        <p class="dock-name">{{ sel.product_name }}</p>
+        <p class="dock-price" *ngIf="!isSlotMode">
+          {{ priceFmt(sel.price) }} · Sisa {{ sel.stock }}
+        </p>
+        <p class="dock-price" *ngIf="isSlotMode">
+          {{ priceFmt(sel.price) }} · Slot {{ sel.slot_code }}
+        </p>
+      </div>
+      <button type="button" class="dock-cta" (click)="onContinue()">
+        Lanjut bayar
+        <span class="dock-cta-arrow" aria-hidden="true">→</span>
+      </button>
+    </div>
+  </aside>
+</ion-content>
