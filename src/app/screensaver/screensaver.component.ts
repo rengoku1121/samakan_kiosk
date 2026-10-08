@@ -14,9 +14,9 @@ export interface ScreensaverSlide {
   fill?: boolean;
 }
 
-/** Sementara 3 detik tiap slide supaya mudah dicoba. Nanti kembalikan 8 detik, slide QR 12 detik. */
-const DEFAULT_MS = 3_000;
-const QR_MS = 3_000;
+/** Durasi produksi: tiap slide 12 detik. */
+const DEFAULT_MS = 12_000;
+const QR_MS = 12_000;
 /** Lama crossfade; slide sebelumnya tetap dirender selama ini. */
 export const SCREENSAVER_FADE_MS = 900;
 

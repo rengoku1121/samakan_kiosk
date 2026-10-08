@@ -54,11 +54,108 @@ h2 {
 }
 
 .card {
-  margin-bottom: 16px;
-  padding: 16px;
+  margin-bottom: 12px;
+  padding: 0;
   border-radius: 16px;
   background: rgba(255, 255, 255, 0.05);
   border: 1px solid rgba(255, 255, 255, 0.1);
+  overflow: hidden;
+}
+
+.card summary {
+  display: flex;
+  align-items: center;
+  padding: 14px 16px;
+  cursor: pointer;
+  list-style: none;
+}
+
+.card summary::-webkit-details-marker {
+  display: none;
+}
+
+.card summary:focus {
+  outline: none;
+}
+
+.card summary:active {
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.card summary h2 {
+  margin: 0;
+  min-width: 0;
+}
+
+.panel-status {
+  margin-left: auto;
+  padding-left: 16px;
+  max-width: 46%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-align: right;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0;
+  text-transform: none;
+  color: rgba(234, 245, 238, 0.78);
+}
+
+.chev {
+  flex-shrink: 0;
+  position: relative;
+  width: 18px;
+  height: 18px;
+  margin-left: 12px;
+}
+
+.chev::before {
+  content: '';
+  position: absolute;
+  top: 4px;
+  left: 4px;
+  width: 8px;
+  height: 8px;
+  border-right: 2px solid rgba(234, 245, 238, 0.78);
+  border-bottom: 2px solid rgba(234, 245, 238, 0.78);
+  transform: rotate(45deg);
+  transition: transform 0.36s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.card details[open] .chev::before {
+  transform: rotate(-135deg);
+}
+
+.card details > .panel-body {
+  display: block;
+  overflow: hidden;
+  height: 0;
+  padding: 0 16px;
+  transition: height 0.36s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Chrome baru membungkus isi details. Aturan ini diabaikan di WebView 66. */
+.card details::details-content {
+  display: block;
+  content-visibility: visible;
+}
+
+.panel-body::before {
+  content: '';
+  display: block;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  margin-bottom: 14px;
+}
+
+.panel-body::after {
+  content: '';
+  display: block;
+  height: 16px;
+}
+
+.panel-body > :first-child {
+  margin-top: 0;
 }
 
 .row {
@@ -148,6 +245,11 @@ input {
     border-top-color: rgba(255, 255, 255, 0.35);
     opacity: 0.8;
   }
+
+  .chev::before,
+  .card details > .panel-body {
+    transition: none;
+  }
 }
 
 .hint {
@@ -230,6 +332,43 @@ input {
 
 .kv dd.bad {
   color: #ff9d8f;
+}
+
+.hist {
+  list-style: none;
+  margin: 10px 0 0;
+  padding: 0;
+}
+
+.hist li {
+  margin-top: 8px;
+  padding: 8px 10px;
+  border-radius: 10px;
+  background: rgba(0, 0, 0, 0.22);
+}
+
+.hist-line span {
+  display: inline-block;
+  margin: 0 10px 4px 0;
+}
+
+.hist .hot {
+  color: #f0b46a;
+}
+
+.hist .cold {
+  color: #7cb897;
+}
+
+.hist .bad {
+  color: #ff9d8f;
+}
+
+.hist code {
+  display: block;
+  font-size: 11px;
+  word-break: break-all;
+  color: #cfe6d9;
 }
 
 .confirm {

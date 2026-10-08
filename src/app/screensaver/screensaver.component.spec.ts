@@ -99,7 +99,7 @@ describe('ScreensaverComponent', () => {
     }
     const qrMs = component.current?.durationMs ?? 0;
     expect(component.current?.id).toBe('07-scan-soft-launch');
-    expect(qrMs).toBe(3_000);
+    expect(qrMs).toBe(12_000);
 
     tick(qrMs - 1);
     expect(component.current?.id).toBe('07-scan-soft-launch');

@@ -34,13 +34,10 @@ export const environment = {
     /** Jendela balasan probe 0x53 di Mode Servis. */
     machineStatusWindowMs: 3000,
   },
-  /**
-   * Attract-mode: tampil setelah idle, kecuali saat bayar/dispense.
-   * Sementara 3 detik supaya mudah dicoba. Produksi tetap 60 detik.
-   */
+  /** Attract-mode: tampil setelah diam 30 detik, kecuali saat bayar/dispense. */
   screensaver: {
     enabled: true,
-    idleMs: 3_000,
+    idleMs: 30_000,
   },
   /** Heartbeat + antrean laporan dispense yang gagal terkirim. */
   health: {

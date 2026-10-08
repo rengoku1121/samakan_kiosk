@@ -84,6 +84,10 @@ export type SlotCheckOutcome = {
   trace?: SlotCheckTrace;
 };
 
+/** Riwayat singkat perintah 0x06 di Mode Servis. Bukan log seluruh byte VMC. */
+export const DRIVE_HISTORY_KEY = 'samakan.kiosk.drive-history';
+const DRIVE_HISTORY_LIMIT = 20;
+
 /**
  * Snapshot frame 0x06 terakhir — dipakai Mode Servis untuk membuktikan
  * "tes dingin" benar-benar mengirim `elevator=0`.
@@ -172,8 +176,12 @@ export class KioskDispenseService {
   private simulator: VmcLoopbackSimulator | null = null;
   private lastMode: DispenseRuntimeMode = 'mock';
   private lastDrive: LastDriveCommand | null = null;
+  private driveHistory: LastDriveCommand[] = [];
 
-  constructor(private readonly serial: VmcSerialTransport) {}
+  constructor(private readonly serial: VmcSerialTransport) {
+    this.driveHistory = readDriveHistory();
+    this.lastDrive = this.driveHistory[0] ? { ...this.driveHistory[0] } : null;
+  }
 
   getLastMode(): DispenseRuntimeMode {
     return this.lastMode;
@@ -182,6 +190,11 @@ export class KioskDispenseService {
   /** Snapshot frame 0x06 terakhir (Mode Servis saja). */
   getLastDriveCommand(): LastDriveCommand | null {
     return this.lastDrive ? { ...this.lastDrive } : null;
+  }
+
+  /** Hingga 20 perintah 0x06 terakhir, yang terbaru di depan. */
+  getDriveHistory(): LastDriveCommand[] {
+    return this.driveHistory.map((d) => ({ ...d }));
   }
 
   /**
@@ -526,7 +539,19 @@ export class KioskDispenseService {
     ok: boolean
   ): void {
     if (!this.lastDrive || this.lastDrive.packNo !== packNo) return;
-    this.lastDrive = { ...this.lastDrive, status, statusLabel, ok };
+    this.commitDrive({ ...this.lastDrive, status, statusLabel, ok });
+  }
+
+  /** Simpan perintah 0x06 terbaru dan geser riwayat, termasuk setelah status akhir masuk. */
+  private commitDrive(cmd: LastDriveCommand): void {
+    this.lastDrive = cmd;
+    const rest = this.driveHistory.filter((d) => !(d.at === cmd.at && d.packNo === cmd.packNo));
+    this.driveHistory = [cmd, ...rest].slice(0, DRIVE_HISTORY_LIMIT);
+    try {
+      localStorage.setItem(DRIVE_HISTORY_KEY, JSON.stringify(this.driveHistory));
+    } catch {
+      // Kuota penuh atau mode privat: kartu tetap memakai memori sesi ini.
+    }
   }
 
   private async runVmc(req: DispenseRequest, mode: DispenseRuntimeMode): Promise<DispenseOutcome> {
@@ -563,7 +588,7 @@ export class KioskDispenseService {
         heatRequested: req.heat_requested,
         enableDropSensor: true,
       });
-      this.lastDrive = {
+      this.commitDrive({
         at: Date.now(),
         hex: bytesToHex(drive),
         packNo,
@@ -574,7 +599,7 @@ export class KioskDispenseService {
         status: null,
         statusLabel: null,
         ok: null,
-      };
+      });
       dispenseLog('info', 'drive frame queued for POLL', {
         packNo,
         slot_code: req.slot_code,
@@ -893,4 +918,33 @@ function jammedCodes(found: JammedQueryResult): Pick<JammedSelectionReport, 'jam
 function describeJammed(found: JammedQueryResult): string {
   const codes = found.jammed.map(formatSelectionCode);
   return codes.length ? `${codes.length} slot jammed: ${codes.join(', ')}` : 'tidak ada slot jammed';
+}
+
+function readDriveHistory(): LastDriveCommand[] {
+  try {
+    const raw = localStorage.getItem(DRIVE_HISTORY_KEY);
+    if (!raw) return [];
+    const parsed: unknown = JSON.parse(raw);
+    if (!Array.isArray(parsed)) return [];
+    return parsed.filter(isDriveRecord).slice(0, DRIVE_HISTORY_LIMIT);
+  } catch {
+    return [];
+  }
+}
+
+function isDriveRecord(v: unknown): v is LastDriveCommand {
+  if (!v || typeof v !== 'object') return false;
+  const d = v as LastDriveCommand;
+  return (
+    typeof d.at === 'number' &&
+    typeof d.hex === 'string' &&
+    typeof d.packNo === 'number' &&
+    typeof d.slotCode === 'string' &&
+    typeof d.heat === 'boolean' &&
+    (d.elevator === 0 || d.elevator === 1) &&
+    (d.mode === 'mock' || d.mode === 'hardware' || d.mode === 'loopback-sim') &&
+    (d.status === null || typeof d.status === 'number') &&
+    (d.statusLabel === null || typeof d.statusLabel === 'string') &&
+    (d.ok === null || typeof d.ok === 'boolean')
+  );
 }

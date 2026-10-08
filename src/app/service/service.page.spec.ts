@@ -46,6 +46,11 @@ class DispenseStub {
     return of(outcome);
   }
 
+  getDriveHistory(): LastDriveCommand[] {
+    const last = this.getLastDriveCommand();
+    return last ? [last] : [];
+  }
+
   getLastDriveCommand(): LastDriveCommand | null {
     const req = this.lastRequest;
     if (!req) return null;
@@ -200,6 +205,23 @@ describe('ServicePage (Mode Servis internal)', () => {
     expect(text('.card:nth-of-type(2)')).toContain('Belum ada perintah 0x06');
   });
 
+  it('kartu mode servis dibuka dan ditutup dari header', () => {
+    const panels = Array.from(
+      (fixture.nativeElement as HTMLElement).querySelectorAll('.card details')
+    ) as HTMLDetailsElement[];
+    expect(panels.length).toBe(9);
+    expect(panels.every((panel) => !panel.open)).toBeTrue();
+
+    const body = panels[0].querySelector('.panel-body') as HTMLElement;
+    panels[0].querySelector('summary')?.click();
+    expect(panels[0].open).toBeTrue();
+    expect(parseFloat(body.style.height)).toBeGreaterThan(0);
+
+    panels[0].querySelector('summary')?.click();
+    expect(panels[0].open).toBeFalse();
+    expect(body.style.height).toBe('0px');
+  });
+
   it('selalu menampilkan tombol tutup aplikasi', () => {
     expect(buttonByLabel('Tutup aplikasi').disabled).toBeFalse();
   });
@@ -294,6 +316,14 @@ describe('ServicePage (Mode Servis internal)', () => {
     expect(card).toContain('FA FB 06 05 01 01 00 00 0D 0F');
     expect(card).toContain('Dispensed successfully');
 
+    const fold = (fixture.nativeElement as HTMLElement).querySelector(
+      '.card:nth-of-type(2) details'
+    ) as HTMLDetailsElement;
+    expect(fold.open).toBeFalse();
+    fold.querySelector('summary')?.click();
+    expect(fold.open).toBeTrue();
+    expect(fold.textContent).toContain('elevator=0');
+
     expect(logLines().some((l) => l.includes('dingin') && l.includes('OK'))).toBeTrue();
   });
 
@@ -309,6 +339,9 @@ describe('ServicePage (Mode Servis internal)', () => {
 
     expect(dispense.lastRequest).toBeNull();
     expect(text('.card:nth-of-type(2)')).toContain('Belum ada perintah 0x06');
+    expect(
+      (fixture.nativeElement as HTMLElement).querySelector('.card:nth-of-type(2) .hist')
+    ).toBeNull();
     expect(
       logLines().some((l) => l.includes('DIBATALKAN') && l.includes('motor tidak dijalankan'))
     ).toBeTrue();

@@ -12,9 +12,6 @@ $RECYCLE.BIN/
 *.log
 log.txt
 
-android/keystore.properties
-android/samakan-release.keystore
-
 /.sourcemaps
 /.versions
 /coverage
@@ -36,6 +33,11 @@ android/samakan-release.keystore
 npm-debug.log
 yarn-error.log
 
+# Rahasia lokal. Jangan di-commit.
+.env
+.env.*
+!.env.example
+
 # IDEs and editors
 .idea/
 .project
@@ -45,6 +47,7 @@ yarn-error.log
 .settings/
 *.sublime-project
 *.sublime-workspace
+*.iml
 
 # Visual Studio Code
 .vscode/*
@@ -53,7 +56,6 @@ yarn-error.log
 !.vscode/launch.json
 !.vscode/extensions.json
 .history/*
-
 
 # Miscellaneous
 /.angular
@@ -70,3 +72,21 @@ testem.log
 # System files
 .DS_Store
 Thumbs.db
+
+# Proyek Android (folder android/) tetap di git.
+# Yang di bawah ini hasil build, cache, atau rahasia mesin lokal.
+android/local.properties
+android/.gradle/
+android/**/build/
+android/captures/
+android/capacitor-cordova-android-plugins/
+android/app/src/main/assets/public
+android/app/src/main/assets/capacitor.config.json
+android/app/src/main/assets/capacitor.plugins.json
+android/app/src/main/res/xml/config.xml
+android/keystore.properties
+android/samakan-release.keystore
+*.jks
+*.keystore
+*.apk
+*.aab

@@ -3,12 +3,13 @@ import { firstValueFrom } from 'rxjs';
 import { VmcLoopbackSimulator } from '../hardware/serial/vmc-loopback.simulator';
 import { VmcSerialTransport } from '../hardware/serial/vmc-serial.transport';
 import { bytesToHex } from '../hardware/vmc';
-import { KioskDispenseService } from './kiosk-dispense.service';
+import { DRIVE_HISTORY_KEY, KioskDispenseService } from './kiosk-dispense.service';
 
 describe('KioskDispenseService (tahap 3)', () => {
   let svc: KioskDispenseService;
 
   beforeEach(() => {
+    localStorage.removeItem(DRIVE_HISTORY_KEY);
     TestBed.configureTestingModule({
       providers: [KioskDispenseService, VmcSerialTransport],
     });
@@ -18,6 +19,7 @@ describe('KioskDispenseService (tahap 3)', () => {
   afterEach(async () => {
     const serial = TestBed.inject(VmcSerialTransport);
     await serial.close();
+    localStorage.removeItem(DRIVE_HISTORY_KEY);
   });
 
   it('loopback-sim: drive selection → DISPENSED ok', async () => {
@@ -74,6 +76,33 @@ describe('KioskDispenseService (tahap 3)', () => {
     expect(drive!.heat).toBeTrue();
     expect(drive!.elevator).toBe(1);
   }, 15000);
+
+  it('menyimpan 20 perintah 0x06 terakhir dan memulihkannya setelah dimuat ulang', async () => {
+    await firstValueFrom(
+      svc.run({ order_code: 'TEST-COLD', slot_code: '013', heat_requested: false })
+    );
+    await firstValueFrom(
+      svc.run({ order_code: 'TEST-HOT', slot_code: '014', heat_requested: true })
+    );
+
+    const history = svc.getDriveHistory();
+    expect(history.length).toBe(2);
+    expect(history[0].slotCode).toBe('014');
+    expect(history[0].elevator).toBe(1);
+    expect(history[0].ok).toBeTrue();
+    expect(history[1].elevator).toBe(0);
+
+    const serial = TestBed.inject(VmcSerialTransport);
+    await serial.close();
+    TestBed.resetTestingModule();
+    TestBed.configureTestingModule({
+      providers: [KioskDispenseService, VmcSerialTransport],
+    });
+    const again = TestBed.inject(KioskDispenseService);
+    expect(again.getDriveHistory().map((d) => d.slotCode)).toEqual(['014', '013']);
+    expect(again.getLastDriveCommand()?.elevator).toBe(1);
+    await TestBed.inject(VmcSerialTransport).close();
+  }, 20000);
 
   it('probe 0x53 melaporkan hex balasan dan tidak meninggalkan command antre', async () => {
     const probe = await svc.requestMachineStatus();

@@ -23,7 +23,7 @@ export const environment = {
   },
   screensaver: {
     enabled: true,
-    idleMs: 60_000,
+    idleMs: 30_000,
   },
   health: {
     heartbeatMs: 60_000,

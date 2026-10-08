@@ -87,6 +87,8 @@ export class ServicePage implements ViewWillEnter, ViewWillLeave, OnDestroy {
 
   /** Snapshot frame 0x06 terakhir — bukti "tes dingin" mengirim elevator=0. */
   lastDrive: LastDriveCommand | null = null;
+  /** Hingga 20 perintah 0x06, yang terbaru di depan. */
+  driveHistory: LastDriveCommand[] = [];
 
   /** Hasil cek / bersihkan jammed terakhir (0x70 · 0x32). */
   jammedReport: JammedSelectionReport | null = null;
@@ -94,6 +96,7 @@ export class ServicePage implements ViewWillEnter, ViewWillLeave, OnDestroy {
   logs: LogLine[] = [];
 
   private progressSub?: Subscription;
+  private readonly panelMotion = new WeakMap<HTMLElement, number>();
   private cancelScan = false;
   private admitted = false;
   private viewGen = 0;
@@ -120,7 +123,7 @@ export class ServicePage implements ViewWillEnter, ViewWillLeave, OnDestroy {
       this.admitted = true;
     }
     this.form = this.config.get();
-    this.lastDrive = this.dispenseSvc.getLastDriveCommand();
+    this.loadDriveLog();
     const gen = ++this.viewGen;
     this.startClock();
     void this.refreshNetwork(gen);
@@ -169,6 +172,50 @@ export class ServicePage implements ViewWillEnter, ViewWillLeave, OnDestroy {
 
   exit(): void {
     void this.router.navigateByUrl('/home');
+  }
+
+  /** Buka/tutup panel. Tinggi dianimasikan supaya tidak meloncat. */
+  togglePanel(event: Event): void {
+    event.preventDefault();
+    const details = (event.currentTarget as HTMLElement | null)?.parentElement as HTMLDetailsElement | null;
+    const body = details?.querySelector('.panel-body') as HTMLElement | null;
+    if (!details || !body) return;
+
+    const opening = !details.open;
+    const gen = (this.panelMotion.get(body) ?? 0) + 1;
+    this.panelMotion.set(body, gen);
+
+    const reduce =
+      typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (reduce) {
+      details.open = opening;
+      body.style.height = opening ? 'auto' : '';
+      return;
+    }
+
+    if (opening) {
+      details.open = true;
+      const target = body.scrollHeight;
+      body.style.height = '0px';
+      void body.offsetHeight;
+      body.style.height = `${target}px`;
+    } else {
+      const laidOut = body.getBoundingClientRect().height;
+      const parsed = parseFloat(body.style.height);
+      const current = laidOut > 0 ? laidOut : Number.isFinite(parsed) ? parsed : body.scrollHeight;
+      body.style.height = `${current}px`;
+      void body.offsetHeight;
+      details.open = false;
+      body.style.height = '0px';
+    }
+
+    const onEnd = (ev: TransitionEvent) => {
+      if (ev.target !== body || ev.propertyName !== 'height') return;
+      if (this.panelMotion.get(body) !== gen) return;
+      body.removeEventListener('transitionend', onEnd);
+      body.style.height = details.open ? 'auto' : '';
+    };
+    body.addEventListener('transitionend', onEnd);
   }
 
   /** Lepas kunci panel lalu tutup aplikasi supaya Settings Android bisa dibuka. */
@@ -367,7 +414,7 @@ export class ServicePage implements ViewWillEnter, ViewWillLeave, OnDestroy {
     } catch (err) {
       this.log(`0x06 ${label} · ERROR · ${this.msg(err)}`, true);
     } finally {
-      this.lastDrive = this.dispenseSvc.getLastDriveCommand();
+      this.loadDriveLog();
       this.busy = false;
       this.busyAction = '';
       this.busyLabel = '';
@@ -515,17 +562,73 @@ export class ServicePage implements ViewWillEnter, ViewWillLeave, OnDestroy {
 
   /** Waktu perintah 0x06 terakhir, jam lokal. */
   get lastDriveAt(): string {
-    if (!this.lastDrive) return '';
-    return new Date(this.lastDrive.at).toLocaleTimeString('id-ID', { hour12: false });
+    return this.driveAt(this.lastDrive);
+  }
+
+  driveAt(d: LastDriveCommand | null): string {
+    if (!d) return '';
+    return new Date(d.at).toLocaleTimeString('id-ID', { hour12: false });
+  }
+
+  driveStatus(d: LastDriveCommand): string {
+    if (d.statusLabel === null) return 'menunggu status…';
+    if (d.status === null) return d.statusLabel;
+    return `${d.statusLabel} (0x${this.hex2(d.status)})`;
+  }
+
+  private loadDriveLog(): void {
+    this.lastDrive = this.dispenseSvc.getLastDriveCommand();
+    this.driveHistory = this.dispenseSvc.getDriveHistory();
   }
 
   /** Status 0x04 terakhir untuk perintah itu; kosong selagi berjalan. */
   get lastDriveStatus(): string {
-    const d = this.lastDrive;
-    if (!d) return '';
-    if (d.statusLabel === null) return 'menunggu status…';
-    if (d.status === null) return d.statusLabel;
-    return `${d.statusLabel} (0x${this.hex2(d.status)})`;
+    return this.lastDrive ? this.driveStatus(this.lastDrive) : '';
+  }
+
+  /** Ringkasan di header panel, tetap terbaca saat panel ditutup. */
+  get slotPanelStatus(): string {
+    if (!this.lastCheck) return `Slot ${this.slotCode}`;
+    return this.lastCheck.ok ? 'Siap' : 'Tidak siap';
+  }
+
+  get drivePanelStatus(): string {
+    if (!this.lastDrive) return 'Belum ada';
+    return `Slot ${this.lastDrive.slotCode} · ${this.lastDrive.heat ? 'panas' : 'dingin'}`;
+  }
+
+  get jammedPanelStatus(): string {
+    if (!this.jammedReport) return 'Belum dicek';
+    if (!this.jammedReport.ok) return 'Gagal';
+    const n = this.jammedReport.jammed?.length ?? 0;
+    return n ? `${n} jammed` : 'Tidak ada jammed';
+  }
+
+  get scanPanelStatus(): string {
+    if (!this.probes.length) return 'Belum discan';
+    return `${this.scanDone}/${this.probes.length} · ${this.okCount} siap`;
+  }
+
+  get identityPanelStatus(): string {
+    return this.form.machineCode || 'Belum diisi';
+  }
+
+  get passwordPanelStatus(): string {
+    return this.usesDefaultServicePassword ? 'Password bawaan' : 'Password khusus';
+  }
+
+  get networkPanelStatus(): string {
+    return this.network.online ? 'Terhubung' : 'Tidak terhubung';
+  }
+
+  get lockPanelStatus(): string {
+    if (this.lock.lockPaused) return 'Kunci dilepas';
+    return this.lock.lockTaskActive ? 'Terkunci' : 'Terbuka';
+  }
+
+  get logPanelStatus(): string {
+    if (this.busy) return 'Memproses…';
+    return this.logs.length ? `${this.logs.length} baris` : 'Kosong';
   }
 
   byteHex(n: number | null | undefined): string {

@@ -18,7 +18,13 @@
     </p>
 
     <section class="card">
-      <h2>Uji slot</h2>
+      <details>
+        <summary (click)="togglePanel($event)">
+          <h2>Uji slot</h2>
+          <span class="panel-status">{{ slotPanelStatus }}</span>
+          <span class="chev" aria-hidden="true"></span>
+        </summary>
+        <div class="panel-body">
       <div class="row">
         <label for="slot">Nomor slot</label>
         <input
@@ -100,11 +106,19 @@
         <dt>Payload</dt>
         <dd><code>{{ t.payloadHex || '—' }}</code></dd>
       </dl>
+        </div>
+      </details>
     </section>
 
     <section class="card">
-      <h2>Perintah terakhir</h2>
-      <p class="hint" *ngIf="!lastDrive">Belum ada perintah 0x06 sejak aplikasi dibuka.</p>
+      <details>
+        <summary (click)="togglePanel($event)">
+          <h2>Perintah terakhir</h2>
+          <span class="panel-status">{{ drivePanelStatus }}</span>
+          <span class="chev" aria-hidden="true"></span>
+        </summary>
+        <div class="panel-body">
+      <p class="hint" *ngIf="!lastDrive">Belum ada perintah 0x06.</p>
       <dl class="kv" *ngIf="lastDrive">
         <dt>Waktu</dt>
         <dd>{{ lastDriveAt }} · {{ lastDrive.mode }}</dd>
@@ -122,10 +136,34 @@
       <p class="hint">
         Tes dingin harus menampilkan <code>elevator=0</code>; tes panas <code>elevator=1</code>.
       </p>
+      <p class="hint" *ngIf="driveHistory.length">
+        {{ driveHistory.length }} perintah terakhir, termasuk pesanan pembeli. Yang terbaru di atas.
+      </p>
+      <ol class="hist" *ngIf="driveHistory.length">
+        <li *ngFor="let d of driveHistory">
+          <p class="hist-line">
+            <span>{{ driveAt(d) }}</span>
+            <span>slot {{ d.slotCode }}</span>
+            <span [class.hot]="d.heat" [class.cold]="!d.heat">
+              {{ d.heat ? 'panas' : 'dingin' }} · elevator={{ d.elevator }}
+            </span>
+            <span [class.bad]="d.ok === false">{{ driveStatus(d) }}</span>
+          </p>
+          <code>{{ d.hex }}</code>
+        </li>
+      </ol>
+        </div>
+      </details>
     </section>
 
     <section class="card">
-      <h2>Slot jammed</h2>
+      <details>
+        <summary (click)="togglePanel($event)">
+          <h2>Slot jammed</h2>
+          <span class="panel-status">{{ jammedPanelStatus }}</span>
+          <span class="chev" aria-hidden="true"></span>
+        </summary>
+        <div class="panel-body">
       <div class="actions">
         <button
           type="button"
@@ -160,10 +198,18 @@
         <dt>Belt gagal tes</dt>
         <dd [class.bad]="!!r.beltFailed?.length">{{ codeList(r.beltFailed) }}</dd>
       </dl>
+        </div>
+      </details>
     </section>
 
     <section class="card">
-      <h2>Scan denah {{ layoutCodes.length }} slot</h2>
+      <details>
+        <summary (click)="togglePanel($event)">
+          <h2>Scan denah {{ layoutCodes.length }} slot</h2>
+          <span class="panel-status">{{ scanPanelStatus }}</span>
+          <span class="chev" aria-hidden="true"></span>
+        </summary>
+        <div class="panel-body">
       <div class="actions">
         <button type="button" class="btn" [class.is-loading]="isLoading('scan')" [disabled]="busy" (click)="scanAll()">
           Mulai scan
@@ -192,10 +238,18 @@
           <span>{{ p.detail || '—' }}</span>
         </div>
       </div>
+        </div>
+      </details>
     </section>
 
     <section class="card">
-      <h2>Identitas mesin</h2>
+      <details>
+        <summary (click)="togglePanel($event)">
+          <h2>Identitas mesin</h2>
+          <span class="panel-status">{{ identityPanelStatus }}</span>
+          <span class="chev" aria-hidden="true"></span>
+        </summary>
+        <div class="panel-body">
       <div class="row">
         <label for="machine">Machine code</label>
         <input id="machine" type="text" [(ngModel)]="form.machineCode" name="machine" />
@@ -214,10 +268,18 @@
       </div>
       <p class="hint" *ngIf="savedNote">{{ savedNote }}</p>
       <p class="hint">Tutup dan buka ulang aplikasi setelah mengganti identitas mesin.</p>
+        </div>
+      </details>
     </section>
 
     <section class="card">
-      <h2>Password mode servis</h2>
+      <details>
+        <summary (click)="togglePanel($event)">
+          <h2>Password mode servis</h2>
+          <span class="panel-status">{{ passwordPanelStatus }}</span>
+          <span class="chev" aria-hidden="true"></span>
+        </summary>
+        <div class="panel-body">
       <p class="hint" *ngIf="usesDefaultServicePassword">
         Mesin ini masih memakai password bawaan pabrik. Ganti supaya khusus mesin ini.
       </p>
@@ -246,10 +308,18 @@
       </div>
       <p class="hint" *ngIf="passwordNote">{{ passwordNote }}</p>
       <p class="hint">Password tersimpan di mesin ini saja, tidak dikirim ke server.</p>
+        </div>
+      </details>
     </section>
 
     <section class="card">
-      <h2>Jaringan</h2>
+      <details>
+        <summary (click)="togglePanel($event)">
+          <h2>Jaringan</h2>
+          <span class="panel-status">{{ networkPanelStatus }}</span>
+          <span class="chev" aria-hidden="true"></span>
+        </summary>
+        <div class="panel-body">
       <dl class="kv">
         <dt>Status</dt>
         <dd [class.bad]="!network.online">{{ network.online ? 'Terhubung' : 'Tidak terhubung' }}</dd>
@@ -277,10 +347,18 @@
       <p class="hint">
         Jam mengikuti jam panel. Nama Wi-Fi dan IP terisi di mesin Android; di browser hanya status koneksi.
       </p>
+        </div>
+      </details>
     </section>
 
     <section class="card">
-      <h2>Kunci panel</h2>
+      <details>
+        <summary (click)="togglePanel($event)">
+          <h2>Kunci panel</h2>
+          <span class="panel-status">{{ lockPanelStatus }}</span>
+          <span class="chev" aria-hidden="true"></span>
+        </summary>
+        <div class="panel-body">
       <p class="hint">
         Device owner:
         {{ lock.lockTaskPermitted ? 'aktif' : 'belum di-provision' }} · Lock task:
@@ -348,10 +426,18 @@
         Panel belum jadi device owner. Lock task tidak akan aktif — jalankan
         <code>adb shell dpm set-device-owner</code> saat provisioning.
       </p>
+        </div>
+      </details>
     </section>
 
     <section class="card">
-      <h2>Log</h2>
+      <details>
+        <summary (click)="togglePanel($event)">
+          <h2>Log</h2>
+          <span class="panel-status">{{ logPanelStatus }}</span>
+          <span class="chev" aria-hidden="true"></span>
+        </summary>
+        <div class="panel-body">
       <p class="busy" *ngIf="busy">{{ busyLabel || 'Memproses…' }}</p>
       <button type="button" class="btn ghost" (click)="clearLog()" [disabled]="!logs.length">
         Bersihkan
@@ -361,6 +447,8 @@
           <code>{{ l.at }}</code> {{ l.text }}
         </li>
       </ul>
+        </div>
+      </details>
     </section>
   </div>
 </ion-content>

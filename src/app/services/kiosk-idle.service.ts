@@ -33,7 +33,7 @@ export class KioskIdleService implements OnDestroy {
   ) {
     const cfg = ((environment as { screensaver?: ScreensaverEnv }).screensaver || {}) as ScreensaverEnv;
     this.enabled = cfg.enabled !== false;
-    this.idleMs = Math.max(1_000, cfg.idleMs ?? 60_000);
+    this.idleMs = Math.max(1_000, cfg.idleMs ?? 30_000);
   }
 
   get isActive(): boolean {
